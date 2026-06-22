@@ -1,0 +1,1096 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>معدل استهلاك واحتياج المعمل</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            direction: rtl;
+        }
+
+        /* ===== LOGIN SCREEN ===== */
+        .login-screen {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .login-box {
+            background: white;
+            border-radius: 24px;
+            padding: 50px 40px;
+            box-shadow: 0 25px 80px rgba(0,0,0,0.3);
+            width: 100%;
+            max-width: 420px;
+            text-align: center;
+        }
+        .login-icon {
+            font-size: 70px;
+            margin-bottom: 20px;
+        }
+        .login-box h1 {
+            color: #333;
+            margin-bottom: 8px;
+            font-size: 26px;
+        }
+        .login-box .subtitle {
+            color: #888;
+            margin-bottom: 35px;
+            font-size: 15px;
+        }
+        .error-msg {
+            background: #ffebee;
+            color: #c62828;
+            padding: 14px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            display: none;
+            border-right: 4px solid #c62828;
+            font-weight: 600;
+        }
+        .error-msg.show { display: block; }
+        .form-group {
+            margin-bottom: 20px;
+            text-align: right;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 600;
+            font-size: 15px;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 15px 18px;
+            border: 2px solid #e8e8e8;
+            border-radius: 14px;
+            font-size: 16px;
+            transition: all 0.3s;
+            font-family: inherit;
+        }
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 4px rgba(102,126,234,0.1);
+        }
+        .btn-login {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 14px;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 10px;
+        }
+        .btn-login:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 30px rgba(102,126,234,0.4);
+        }
+
+        /* ===== DASHBOARD ===== */
+        .dashboard { display: none; }
+
+        .top-bar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: white;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .top-bar .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: rgba(255,255,255,0.2);
+            padding: 8px 18px;
+            border-radius: 30px;
+            font-weight: 600;
+        }
+        .btn-logout {
+            background: rgba(255,255,255,0.25);
+            color: white;
+            border: 2px solid rgba(255,255,255,0.4);
+            padding: 10px 22px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        .btn-logout:hover {
+            background: rgba(255,255,255,0.4);
+        }
+
+        .nav-tabs {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            padding: 20px;
+            flex-wrap: wrap;
+        }
+        .nav-tab {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: none;
+            padding: 12px 28px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 600;
+            transition: all 0.3s;
+            backdrop-filter: blur(10px);
+        }
+        .nav-tab:hover { background: rgba(255,255,255,0.35); }
+        .nav-tab.active {
+            background: white;
+            color: #667eea;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+        }
+
+        .main-content {
+            padding: 0 30px 30px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .content-card {
+            background: white;
+            border-radius: 24px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .content-card h2 {
+            color: #333;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 3px solid #667eea;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 22px;
+        }
+        .hint-box {
+            background: #e3f2fd;
+            border-right: 4px solid #2196f3;
+            padding: 15px 20px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            color: #1565c0;
+            font-size: 14px;
+        }
+
+        /* Forms */
+        .input-row {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            align-items: flex-end;
+        }
+        .input-group {
+            flex: 1;
+            min-width: 150px;
+        }
+        .input-group label {
+            display: block;
+            margin-bottom: 6px;
+            color: #555;
+            font-size: 13px;
+            font-weight: 600;
+        }
+        .input-group input, .input-group select {
+            width: 100%;
+            padding: 12px 14px;
+            border: 2px solid #e8e8e8;
+            border-radius: 12px;
+            font-size: 15px;
+            font-family: inherit;
+            transition: all 0.2s;
+        }
+        .input-group input:focus, .input-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn-add {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 28px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 700;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+        }
+        .btn-add:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102,126,234,0.4);
+        }
+        .btn-delete {
+            background: #ff5252;
+            color: white;
+            border: none;
+            padding: 6px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: background 0.2s;
+        }
+        .btn-delete:hover { background: #d32f2f; }
+
+        /* Tables */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            font-size: 14px;
+        }
+        .data-table th {
+            background: #f8f9fa;
+            color: #555;
+            padding: 14px 12px;
+            text-align: right;
+            font-weight: 700;
+            border-bottom: 2px solid #e0e0e0;
+        }
+        .data-table td {
+            padding: 12px;
+            border-bottom: 1px solid #f0f0f0;
+            vertical-align: middle;
+        }
+        .data-table tr:hover { background: #fafafa; }
+        .data-table input {
+            width: 80px;
+            padding: 6px 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 50px 20px;
+            color: #999;
+        }
+        .empty-state .icon { font-size: 50px; margin-bottom: 15px; }
+
+        /* Stats */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        .stat-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+        }
+        .stat-box .number {
+            font-size: 28px;
+            font-weight: 800;
+            margin-bottom: 5px;
+        }
+        .stat-box .label { font-size: 13px; opacity: 0.9; }
+
+        .company-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-weight: 700;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        .badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+        .badge-success { background: #e8f5e9; color: #2e7d32; }
+        .badge-warning { background: #fff3e0; color: #ef6c00; }
+        .badge-danger { background: #ffebee; color: #c62828; }
+
+        .sync-status {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: white;
+            padding: 10px 20px;
+            border-radius: 30px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            z-index: 1000;
+        }
+        .sync-status.online { color: #4caf50; }
+        .sync-status.offline { color: #ff9800; }
+        .sync-status.error { color: #f44336; }
+
+        @media (max-width: 768px) {
+            .main-content { padding: 0 15px 20px; }
+            .content-card { padding: 20px; }
+            .input-row { flex-direction: column; }
+            .input-group { min-width: 100%; }
+            .data-table { font-size: 12px; }
+            .data-table th, .data-table td { padding: 8px 6px; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ===== LOGIN SCREEN ===== -->
+<div class="login-screen" id="loginScreen">
+    <div class="login-box">
+        <div class="login-icon">🧪</div>
+        <h1>معدل استهلاك واحتياج المعمل</h1>
+        <p class="subtitle">نظام إدارة المستلزمات والطلبيات والمديونية</p>
+
+        <div class="error-msg" id="errorMsg">
+            ❌ كلمة المرور غير صحيحة
+        </div>
+
+        <div class="form-group">
+            <label for="password">🔒 كلمة المرور</label>
+            <input type="password" id="password" placeholder="أدخل كلمة المرور">
+        </div>
+
+        <button class="btn-login" onclick="login()">
+            🔐 تسجيل الدخول
+        </button>
+    </div>
+</div>
+
+<!-- ===== DASHBOARD ===== -->
+<div class="dashboard" id="dashboard">
+    <div class="top-bar">
+        <button class="btn-logout" onclick="logout()">🚪 تسجيل الخروج</button>
+        <div class="nav-tabs">
+            <button class="nav-tab active" onclick="showTab('inventory', this)">📦 المخزون</button>
+            <button class="nav-tab" onclick="showTab('consumption', this)">📊 الاستهلاك</button>
+            <button class="nav-tab" onclick="showTab('orders', this)">🛒 الطلبيات</button>
+            <button class="nav-tab" onclick="showTab('debts', this)">💰 المديونية</button>
+        </div>
+        <div class="user-info">👤 أسماء</div>
+    </div>
+
+    <div class="main-content">
+
+        <!-- ===== INVENTORY TAB ===== -->
+        <div class="tab-content active" id="inventoryTab">
+            <div class="content-card">
+                <h2>📦 شاشة المخزون</h2>
+                <div class="hint-box">
+                    💡 أضف المستلزمات مع نوع الوحدة وسعر الوحدة والكمية المخزنة. يمكنك تعديل سعر الوحدة والكمية مباشرة من الجدول.
+                </div>
+
+                <div class="input-row">
+                    <div class="input-group" style="flex:2;">
+                        <label>اسم المستلزم</label>
+                        <input type="text" id="invName" placeholder="مثال: محلول NaCl">
+                    </div>
+                    <div class="input-group">
+                        <label>نوع الوحدة</label>
+                        <select id="invUnit">
+                            <option value="لتر">لتر</option>
+                            <option value="مل">مل</option>
+                            <option value="كجم">كجم</option>
+                            <option value="جرام">جرام</option>
+                            <option value="عبوة">عبوة</option>
+                            <option value="علبة">علبة</option>
+                            <option value="أنبوب">أنبوب</option>
+                            <option value="طرف">طرف</option>
+                            <option value="قطعة">قطعة</option>
+                            <option value="شريحة">شريحة</option>
+                            <option value="تيست">تيست</option>
+                            <option value="ميكروبلايت">ميكروبلايت</option>
+                            <option value="كرتونة">كرتونة</option>
+                            <option value="باكو">باكو</option>
+                            <option value="كيس">كيس</option>
+                            <option value="امبول">امبول</option>
+                            <option value="قاروره">قاروره</option>
+                            <option value="جركن">جركن</option>
+                            <option value="علبه بلاستيك">علبه بلاستيك</option>
+                            <option value="علبه زجاج">علبه زجاج</option>
+                            <option value="علبه معدن">علبه معدن</option>
+                            <option value="علبه ورق">علبه ورق</option>
+                            <option value="علبه كرتون">علبه كرتون</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label>سعر الوحدة (جنيه)</label>
+                        <input type="number" id="invPrice" placeholder="0" step="0.01">
+                    </div>
+                    <div class="input-group">
+                        <label>الكمية المخزنة</label>
+                        <input type="number" id="invQty" placeholder="0">
+                    </div>
+                    <button class="btn-add" onclick="addInventory()">➕ إضافة</button>
+                </div>
+
+                <div id="inventoryTable"></div>
+            </div>
+        </div>
+
+        <!-- ===== CONSUMPTION TAB ===== -->
+        <div class="tab-content" id="consumptionTab">
+            <div class="content-card">
+                <h2>📊 شاشة معدل الاستهلاك</h2>
+                <div class="hint-box">
+                    💡 أدخل المستهلك والاستهلاك اليومي لكل صنف. يظهر المخزون والباقي (المخزون - الاستهلاك) تلقائياً.
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-box">
+                        <div class="number" id="statItems">0</div>
+                        <div class="label">إجمالي الأصناف</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="number" id="statDaily">0</div>
+                        <div class="label">إجمالي الاستهلاك اليومي</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="number" id="statMonthly">0</div>
+                        <div class="label">إجمالي الاستهلاك الشهري</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="number" id="statCost">0</div>
+                        <div class="label">إجمالي التكلفة اليومية</div>
+                    </div>
+                </div>
+
+                <div class="input-row">
+                    <div class="input-group" style="flex:2;">
+                        <label>الصنف</label>
+                        <select id="consItem"></select>
+                    </div>
+                    <div class="input-group">
+                        <label>المستهلك</label>
+                        <input type="text" id="consConsumer" placeholder="اسم المستهلك">
+                    </div>
+                    <div class="input-group">
+                        <label>الاستهلاك اليومي</label>
+                        <input type="number" id="consDaily" placeholder="0" step="0.01">
+                    </div>
+                    <button class="btn-add" onclick="addConsumption()">➕ إضافة</button>
+                </div>
+
+                <div id="consumptionTable"></div>
+            </div>
+        </div>
+
+        <!-- ===== ORDERS TAB ===== -->
+        <div class="tab-content" id="ordersTab">
+            <div class="content-card">
+                <h2>🛒 شاشة الطلبيات</h2>
+                <div class="hint-box">
+                    💡 الطلبية تُحسب تلقائياً من معدل الاحتياج الشهري. الإجمالي يُحسب تلقائياً (الكمية × السعر). يمكنك تعديل الكمية المطلوبة يدوياً.
+                </div>
+
+                <div class="stats-grid" style="grid-template-columns: repeat(2, 1fr);">
+                    <div class="stat-box">
+                        <div class="number" id="statOrderItems">0</div>
+                        <div class="label">عدد الأصناف المطلوبة</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="number" id="statOrderTotal">0</div>
+                        <div class="label">إجمالي قيمة الطلبية</div>
+                    </div>
+                </div>
+
+                <div id="ordersTable"></div>
+            </div>
+        </div>
+
+        <!-- ===== DEBTS TAB ===== -->
+        <div class="tab-content" id="debtsTab">
+            <div class="content-card">
+                <div class="company-badge">🏢 شركة بيور</div>
+                <h2>💰 شاشة المديونية</h2>
+                <div class="hint-box">
+                    💡 أدخل المديونية القديمة (أول مرة فقط)، والطلبية الواردة، والسداد. المديونية القديمة تُكتب تلقائياً من المبلغ الباقي السابق. المبلغ الباقي ومعدل السداد الشهري يُحسبان تلقائياً.
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-box">
+                        <div class="number" id="statOldDebt">0</div>
+                        <div class="label">المديونية القديمة</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="number" id="statNewOrder">0</div>
+                        <div class="label">الطلبية الواردة</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="number" id="statPayment">0</div>
+                        <div class="label">السداد</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="number" id="statRemaining">0</div>
+                        <div class="label">💰 المبلغ الباقي</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="number" id="statMonthlyPay">0</div>
+                        <div class="label">📅 معدل السداد الشهري</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="number" id="statMonthsLeft">0</div>
+                        <div class="label">⏳ الأشهر المتبقية</div>
+                    </div>
+                </div>
+
+                <div class="input-row">
+                    <div class="input-group">
+                        <label>المديونية القديمة</label>
+                        <input type="number" id="debtOld" placeholder="0" step="0.01">
+                    </div>
+                    <div class="input-group">
+                        <label>الطلبية الواردة</label>
+                        <input type="number" id="debtNew" placeholder="0" step="0.01">
+                    </div>
+                    <div class="input-group">
+                        <label>السداد</label>
+                        <input type="number" id="debtPay" placeholder="0" step="0.01">
+                    </div>
+                    <button class="btn-add" onclick="addDebt()">➕ إضافة</button>
+                </div>
+
+                <div id="debtsTable"></div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- Sync Status -->
+<div class="sync-status online" id="syncStatus">
+    <span id="syncIcon">☁️</span>
+    <span id="syncText">متصل بالسحابة</span>
+</div>
+
+<!-- Firebase SDK -->
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getFirestore, collection, doc, setDoc, getDoc, onSnapshot, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyAclAL-32zx4biBn97QqBiaWS4M7U7Cf3E",
+        authDomain: "lab-inventory-b2f6e.firebaseapp.com",
+        projectId: "lab-inventory-b2f6e",
+        storageBucket: "lab-inventory-b2f6e.firebasestorage.app",
+        messagingSenderId: "694689884198",
+        appId: "1:694689884198:web:e8919388ce0041a8d11ee7",
+        measurementId: "G-4TVTS8QKE2"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // ========== PASSWORD ==========
+    const CORRECT_PASSWORD = "Asmaa@1999";
+
+    // ========== DATA ==========
+    let inventory = [];
+    let consumption = [];
+    let debts = [];
+    let isOnline = true;
+
+    // ========== FIREBASE SYNC ==========
+    async function saveToFirebase() {
+        try {
+            await setDoc(doc(db, "lab", "data"), {
+                inventory, consumption, debts,
+                updatedAt: new Date().toISOString()
+            });
+            updateSyncStatus(true, "☁️ متزامن مع السحابة");
+        } catch (e) {
+            console.error("Firebase save error:", e);
+            updateSyncStatus(false, "⚠️ غير متصل - محفوظ محلياً");
+            // Fallback to localStorage
+            localStorage.setItem('lab_inv_backup', JSON.stringify({inventory, consumption, debts}));
+        }
+    }
+
+    async function loadFromFirebase() {
+        try {
+            const docRef = doc(db, "lab", "data");
+            const docSnap = await getDoc(docRef);
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                inventory = data.inventory || [];
+                consumption = data.consumption || [];
+                debts = data.debts || [];
+                updateSyncStatus(true, "☁️ متصل بالسحابة");
+            } else {
+                // Try localStorage backup
+                const backup = localStorage.getItem('lab_inv_backup');
+                if (backup) {
+                    const data = JSON.parse(backup);
+                    inventory = data.inventory || [];
+                    consumption = data.consumption || [];
+                    debts = data.debts || [];
+                    await saveToFirebase();
+                }
+            }
+        } catch (e) {
+            console.error("Firebase load error:", e);
+            const backup = localStorage.getItem('lab_inv_backup');
+            if (backup) {
+                const data = JSON.parse(backup);
+                inventory = data.inventory || [];
+                consumption = data.consumption || [];
+                debts = data.debts || [];
+            }
+            updateSyncStatus(false, "⚠️ غير متصل - وضع عدم الاتصال");
+        }
+        renderAll();
+    }
+
+    // Real-time sync
+    onSnapshot(doc(db, "lab", "data"), (docSnap) => {
+        if (docSnap.exists()) {
+            const data = docSnap.data();
+            inventory = data.inventory || [];
+            consumption = data.consumption || [];
+            debts = data.debts || [];
+            renderAll();
+            updateSyncStatus(true, "☁️ متزامن تلقائياً");
+        }
+    });
+
+    function updateSyncStatus(online, text) {
+        isOnline = online;
+        const el = document.getElementById('syncStatus');
+        const icon = document.getElementById('syncIcon');
+        const txt = document.getElementById('syncText');
+        el.className = 'sync-status ' + (online ? 'online' : 'offline');
+        icon.textContent = online ? '☁️' : '⚠️';
+        txt.textContent = text;
+    }
+
+    // ========== LOGIN ==========
+    window.login = function() {
+        const pwd = document.getElementById('password').value;
+        if (pwd === CORRECT_PASSWORD) {
+            document.getElementById('loginScreen').style.display = 'none';
+            document.getElementById('dashboard').style.display = 'block';
+            document.getElementById('errorMsg').classList.remove('show');
+            loadFromFirebase();
+        } else {
+            document.getElementById('errorMsg').classList.add('show');
+            document.getElementById('password').value = '';
+            document.getElementById('password').focus();
+        }
+    };
+
+    document.getElementById('password').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') window.login();
+    });
+
+    window.logout = function() {
+        document.getElementById('loginScreen').style.display = 'flex';
+        document.getElementById('dashboard').style.display = 'none';
+        document.getElementById('password').value = '';
+    };
+
+    // ========== TABS ==========
+    window.showTab = function(tab, btn) {
+        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.nav-tab').forEach(b => b.classList.remove('active'));
+        document.getElementById(tab + 'Tab').classList.add('active');
+        btn.classList.add('active');
+        renderAll();
+    };
+
+    function renderAll() {
+        renderInventory();
+        renderConsumptionSelect();
+        renderConsumption();
+        renderOrders();
+        renderDebts();
+    }
+
+    // ========== INVENTORY ==========
+    window.addInventory = async function() {
+        const name = document.getElementById('invName').value.trim();
+        const unit = document.getElementById('invUnit').value;
+        const price = parseFloat(document.getElementById('invPrice').value) || 0;
+        const qty = parseFloat(document.getElementById('invQty').value) || 0;
+
+        if (!name) { alert('أدخل اسم المستلزم'); return; }
+
+        inventory.push({ id: Date.now(), name, unit, price, qty });
+        await saveToFirebase();
+
+        document.getElementById('invName').value = '';
+        document.getElementById('invPrice').value = '';
+        document.getElementById('invQty').value = '';
+
+        renderAll();
+    };
+
+    function renderInventory() {
+        const container = document.getElementById('inventoryTable');
+        if (inventory.length === 0) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <div class="icon">📭</div>
+                    <div>لا يوجد مستلزمات مسجلة</div>
+                    <div style="font-size:13px; margin-top:5px;">أضف المستلزمات أولاً من الأعلى</div>
+                </div>`;
+            return;
+        }
+
+        let html = `<table class="data-table">
+            <thead><tr>
+                <th>#</th>
+                <th>اسم المستلزم</th>
+                <th>نوع الوحدة</th>
+                <th>سعر الوحدة (جنيه)</th>
+                <th>الكمية المخزنة</th>
+                <th>إجمالي القيمة</th>
+                <th>إجراءات</th>
+            </tr></thead><tbody>`;
+
+        inventory.forEach((item, i) => {
+            const total = (item.price * item.qty).toFixed(2);
+            html += `<tr>
+                <td>${i + 1}</td>
+                <td>${item.name}</td>
+                <td>${item.unit}</td>
+                <td><input type="number" value="${item.price}" onchange="updateInvPrice(${item.id}, this.value)" step="0.01"></td>
+                <td><input type="number" value="${item.qty}" onchange="updateInvQty(${item.id}, this.value)"></td>
+                <td>${total} ج.م</td>
+                <td><button class="btn-delete" onclick="deleteInv(${item.id})">🗑️ حذف</button></td>
+            </tr>`;
+        });
+
+        html += '</tbody></table>';
+        container.innerHTML = html;
+    }
+
+    window.updateInvPrice = async function(id, val) {
+        const item = inventory.find(i => i.id === id);
+        if (item) { item.price = parseFloat(val) || 0; await saveToFirebase(); renderAll(); }
+    };
+    window.updateInvQty = async function(id, val) {
+        const item = inventory.find(i => i.id === id);
+        if (item) { item.qty = parseFloat(val) || 0; await saveToFirebase(); renderAll(); }
+    };
+    window.deleteInv = async function(id) {
+        if (!confirm('هل أنت متأكد من الحذف؟')) return;
+        inventory = inventory.filter(i => i.id !== id);
+        consumption = consumption.filter(c => inventory.some(i => i.id === c.itemId));
+        await saveToFirebase();
+        renderAll();
+    };
+
+    // ========== CONSUMPTION ==========
+    function renderConsumptionSelect() {
+        const select = document.getElementById('consItem');
+        select.innerHTML = inventory.map(i => `<option value="${i.id}">${i.name} (${i.qty} ${i.unit})</option>`).join('');
+    }
+
+    window.addConsumption = async function() {
+        const itemId = parseInt(document.getElementById('consItem').value);
+        const consumer = document.getElementById('consConsumer').value.trim();
+        const daily = parseFloat(document.getElementById('consDaily').value) || 0;
+
+        if (!itemId || !consumer || daily <= 0) { alert('أكمل جميع البيانات'); return; }
+
+        const existing = consumption.find(c => c.itemId === itemId && c.consumer === consumer);
+        if (existing) {
+            existing.daily = daily;
+        } else {
+            consumption.push({ id: Date.now(), itemId, consumer, daily });
+        }
+        await saveToFirebase();
+
+        document.getElementById('consConsumer').value = '';
+        document.getElementById('consDaily').value = '';
+
+        renderAll();
+    };
+
+    function renderConsumption() {
+        const container = document.getElementById('consumptionTable');
+
+        let totalItems = 0, totalDaily = 0, totalCost = 0;
+
+        if (consumption.length === 0 || inventory.length === 0) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <div class="icon">📭</div>
+                    <div>لا يوجد بيانات</div>
+                    <div style="font-size:13px; margin-top:5px;">أضف المستلزمات في شاشة المخزون أولاً</div>
+                </div>`;
+            updateConsumptionStats(0, 0, 0, 0);
+            return;
+        }
+
+        let html = `<table class="data-table">
+            <thead><tr>
+                <th>الصنف</th>
+                <th>المستهلك</th>
+                <th>الاستهلاك اليومي</th>
+                <th>الاستهلاك الشهري</th>
+                <th>المخزون</th>
+                <th>الباقي (يوم)</th>
+                <th>الباقي (شهر)</th>
+                <th>التكلفة اليومية</th>
+                <th>إجراءات</th>
+            </tr></thead><tbody>`;
+
+        consumption.forEach(c => {
+            const item = inventory.find(i => i.id === c.itemId);
+            if (!item) return;
+            totalItems++;
+            totalDaily += c.daily;
+            const monthly = c.daily * 30;
+            const daysLeft = c.daily > 0 ? Math.floor(item.qty / c.daily) : 0;
+            const monthsLeft = c.daily > 0 ? Math.floor(item.qty / monthly) : 0;
+            const dailyCost = c.daily * item.price;
+            totalCost += dailyCost;
+
+            const statusClass = daysLeft < 7 ? 'badge-danger' : (daysLeft < 30 ? 'badge-warning' : 'badge-success');
+
+            html += `<tr>
+                <td>${item.name}</td>
+                <td>${c.consumer}</td>
+                <td>${c.daily} ${item.unit}/يوم</td>
+                <td>${monthly.toFixed(2)} ${item.unit}</td>
+                <td>${item.qty} ${item.unit}</td>
+                <td><span class="badge ${statusClass}">${daysLeft} يوم</span></td>
+                <td>${monthsLeft} شهر</td>
+                <td>${dailyCost.toFixed(2)} ج.م</td>
+                <td><button class="btn-delete" onclick="deleteCons(${c.id})">🗑️</button></td>
+            </tr>`;
+        });
+
+        html += '</tbody></table>';
+        container.innerHTML = html;
+        updateConsumptionStats(totalItems, totalDaily, totalDaily * 30, totalCost);
+    }
+
+    function updateConsumptionStats(items, daily, monthly, cost) {
+        document.getElementById('statItems').textContent = items;
+        document.getElementById('statDaily').textContent = daily.toFixed(2);
+        document.getElementById('statMonthly').textContent = monthly.toFixed(2);
+        document.getElementById('statCost').textContent = cost.toFixed(2) + ' ج.م';
+    }
+
+    window.deleteCons = async function(id) {
+        consumption = consumption.filter(c => c.id !== id);
+        await saveToFirebase();
+        renderAll();
+    };
+
+    // ========== ORDERS ==========
+    function renderOrders() {
+        const container = document.getElementById('ordersTable');
+
+        if (consumption.length === 0 || inventory.length === 0) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <div class="icon">📭</div>
+                    <div>لا يوجد بيانات للطلب</div>
+                    <div style="font-size:13px; margin-top:5px;">أكمل بيانات الاستهلاك في الشاشة السابقة أولاً</div>
+                </div>`;
+            updateOrderStats(0, 0);
+            return;
+        }
+
+        let orderItems = [];
+        let totalValue = 0;
+
+        consumption.forEach(c => {
+            const item = inventory.find(i => i.id === c.itemId);
+            if (!item) return;
+            const monthlyNeed = c.daily * 30;
+            const orderQty = Math.max(0, Math.ceil(monthlyNeed - item.qty));
+            if (orderQty > 0) {
+                const value = orderQty * item.price;
+                totalValue += value;
+                orderItems.push({ ...c, item, orderQty, value, monthlyNeed });
+            }
+        });
+
+        if (orderItems.length === 0) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <div class="icon">✅</div>
+                    <div>المخزون كافٍ لجميع الاحتياجات</div>
+                    <div style="font-size:13px; margin-top:5px;">لا تحتاج لطلبيات حالياً</div>
+                </div>`;
+            updateOrderStats(0, 0);
+            return;
+        }
+
+        let html = `<table class="data-table">
+            <thead><tr>
+                <th>الصنف</th>
+                <th>الاحتياج الشهري</th>
+                <th>المخزون</th>
+                <th>الكمية المطلوبة</th>
+                <th>سعر الوحدة</th>
+                <th>الإجمالي</th>
+            </tr></thead><tbody>`;
+
+        orderItems.forEach(o => {
+            html += `<tr>
+                <td>${o.item.name}</td>
+                <td>${o.monthlyNeed.toFixed(2)} ${o.item.unit}</td>
+                <td>${o.item.qty} ${o.item.unit}</td>
+                <td>${o.orderQty}</td>
+                <td>${o.item.price} ج.م</td>
+                <td>${o.value.toFixed(2)} ج.م</td>
+            </tr>`;
+        });
+
+        html += `<tr style="background:#f8f9fa; font-weight:700;">
+            <td colspan="5" style="text-align:left;">إجمالي الطلبية:</td>
+            <td>${totalValue.toFixed(2)} ج.م</td>
+        </tr></tbody></table>`;
+
+        container.innerHTML = html;
+        updateOrderStats(orderItems.length, totalValue);
+    }
+
+    function updateOrderStats(items, total) {
+        document.getElementById('statOrderItems').textContent = items;
+        document.getElementById('statOrderTotal').textContent = total.toFixed(2) + ' ج.م';
+    }
+
+    // ========== DEBTS ==========
+    window.addDebt = async function() {
+        const oldDebt = parseFloat(document.getElementById('debtOld').value) || 0;
+        const newOrder = parseFloat(document.getElementById('debtNew').value) || 0;
+        const payment = parseFloat(document.getElementById('debtPay').value) || 0;
+
+        if (oldDebt === 0 && newOrder === 0 && payment === 0) { alert('أدخل بيانات صحيحة'); return; }
+
+        let actualOld = oldDebt;
+        if (oldDebt === 0 && debts.length > 0) {
+            const last = debts[debts.length - 1];
+            actualOld = last.remaining;
+        }
+
+        const total = actualOld + newOrder;
+        const remaining = total - payment;
+        const monthlyPay = remaining > 0 ? (remaining / 12) : 0;
+        const monthsLeft = monthlyPay > 0 ? Math.ceil(remaining / monthlyPay) : 0;
+
+        debts.push({
+            id: Date.now(),
+            oldDebt: actualOld,
+            newOrder,
+            payment,
+            remaining,
+            monthlyPay,
+            monthsLeft,
+            date: new Date().toISOString().split('T')[0]
+        });
+        await saveToFirebase();
+
+        document.getElementById('debtOld').value = '';
+        document.getElementById('debtNew').value = '';
+        document.getElementById('debtPay').value = '';
+
+        renderAll();
+    };
+
+    function renderDebts() {
+        const container = document.getElementById('debtsTable');
+
+        if (debts.length === 0) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <div class="icon">📭</div>
+                    <div>لا يوجد سجل مديونية</div>
+                    <div style="font-size:13px; margin-top:5px;">أضف بيانات المديونية أولاً من الأعلى</div>
+                </div>`;
+            updateDebtStats(0, 0, 0, 0, 0, 0);
+            return;
+        }
+
+        let html = `<table class="data-table">
+            <thead><tr>
+                <th>التاريخ</th>
+                <th>المديونية القديمة</th>
+                <th>الطلبية الواردة</th>
+                <th>السداد</th>
+                <th>المبلغ الباقي</th>
+                <th>معدل السداد الشهري</th>
+                <th>الأشهر المتبقية</th>
+                <th>إجراءات</th>
+            </tr></thead><tbody>`;
+
+        debts.forEach(d => {
+            html += `<tr>
+                <td>${d.date}</td>
+                <td>${d.oldDebt.toFixed(2)} ج.م</td>
+                <td>${d.newOrder.toFixed(2)} ج.م</td>
+                <td>${d.payment.toFixed(2)} ج.م</td>
+                <td style="font-weight:700; color:${d.remaining > 0 ? '#c62828' : '#2e7d32'};">${d.remaining.toFixed(2)} ج.م</td>
+                <td>${d.monthlyPay.toFixed(2)} ج.م</td>
+                <td>${d.monthsLeft} شهر</td>
+                <td><button class="btn-delete" onclick="deleteDebt(${d.id})">🗑️</button></td>
+            </tr>`;
+        });
+
+        html += '</tbody></table>';
+        container.innerHTML = html;
+
+        const last = debts[debts.length - 1];
+        updateDebtStats(last.oldDebt, last.newOrder, last.payment, last.remaining, last.monthlyPay, last.monthsLeft);
+    }
+
+    function updateDebtStats(oldD, newD, pay, rem, monthly, months) {
+        document.getElementById('statOldDebt').textContent = oldD.toFixed(2) + ' ج.م';
+        document.getElementById('statNewOrder').textContent = newD.toFixed(2) + ' ج.م';
+        document.getElementById('statPayment').textContent = pay.toFixed(2) + ' ج.م';
+        document.getElementById('statRemaining').textContent = rem.toFixed(2) + ' ج.م';
+        document.getElementById('statMonthlyPay').textContent = monthly.toFixed(2) + ' ج.م';
+        document.getElementById('statMonthsLeft').textContent = months + ' شهر';
+    }
+
+    window.deleteDebt = async function(id) {
+        if (!confirm('هل أنت متأكد من الحذف؟')) return;
+        debts = debts.filter(d => d.id !== id);
+        await saveToFirebase();
+        renderAll();
+    };
+</script>
+</body>
+</html>
