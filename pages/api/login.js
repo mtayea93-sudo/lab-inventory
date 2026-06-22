@@ -1,7 +1,7 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
-const ADMIN_PASSWORD_HASH = '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi'; // Asmaa@1999
+const ADMIN_PASSWORD_HASH = '$2b$10$LZroKCszBhYGO3MHPPcfaulEKf051w.N6Ihe11bw6k65ItqPylnhu'; // Asmaa@1999
 const JWT_SECRET = 'lab_inventory_secret_key_asmaa_2024';
 
 export default async function handler(req, res) {
