@@ -518,6 +518,17 @@
                 </div>
 
                 <div id="consumptionTable"></div>
+                
+                <div style="margin-top: 30px;">
+                    <h3 style="color: #333; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #667eea;">
+                        📊 الإحصائية الشهرية لكل صنف
+                    </h3>
+                    <div class="hint-box">
+                        💡 يتم حساب الاستهلاك الشهري تلقائياً (الاستهلاك اليومي × 30 يوم). يظهر الباقي بعد خصم الاستهلاك الشهري من المخزون الحالي.
+                    </div>
+                    <div id="consumptionMonthlyStats"></div>
+                </div>
+
             </div>
         </div>
 
@@ -730,13 +741,14 @@
     let inventory = [];
     let consumption = [];
     let debts = [];
+    let orders = [];
     let isOnline = true;
 
     // ========== FIREBASE SYNC ==========
     async function saveToFirebase() {
         try {
             await setDoc(doc(db, "lab", "data"), {
-                inventory, consumption, debts,
+                inventory, consumption, debts, orders,
                 updatedAt: new Date().toISOString()
             });
             updateSyncStatus(true, "☁️ متزامن مع السحابة");
@@ -744,7 +756,7 @@
             console.error("Firebase save error:", e);
             updateSyncStatus(false, "⚠️ غير متصل - محفوظ محلياً");
             // Fallback to localStorage
-            localStorage.setItem('lab_inv_backup', JSON.stringify({inventory, consumption, debts}));
+            localStorage.setItem('lab_inv_backup', JSON.stringify({inventory, consumption, debts, orders}));
         }
     }
 
@@ -757,6 +769,7 @@
                 inventory = data.inventory || [];
                 consumption = data.consumption || [];
                 debts = data.debts || [];
+                orders = data.orders || [];
                 updateSyncStatus(true, "☁️ متصل بالسحابة");
             } else {
                 // Try localStorage backup
@@ -766,6 +779,7 @@
                     inventory = data.inventory || [];
                     consumption = data.consumption || [];
                     debts = data.debts || [];
+                orders = data.orders || [];
                     await saveToFirebase();
                 }
             }
@@ -777,6 +791,7 @@
                 inventory = data.inventory || [];
                 consumption = data.consumption || [];
                 debts = data.debts || [];
+                orders = data.orders || [];
             }
             updateSyncStatus(false, "⚠️ غير متصل - وضع عدم الاتصال");
         }
@@ -790,6 +805,7 @@
             inventory = data.inventory || [];
             consumption = data.consumption || [];
             debts = data.debts || [];
+                orders = data.orders || [];
             renderAll();
             updateSyncStatus(true, "☁️ متزامن تلقائياً");
         }
@@ -845,6 +861,7 @@
         renderInventory();
         renderConsumptionSelect();
         renderConsumption();
+        renderConsumptionMonthlyStats();
         renderOrders();
         renderDebts();
         renderDailyStatement();
@@ -1136,79 +1153,184 @@
         renderAll();
     };
 
-    // ========== ORDERS ==========
-    let orderItems = [];
 
-    function renderOrders() {
-        const container = document.getElementById('ordersTable');
-
-        if (consumption.length === 0 || inventory.length === 0) {
+    function renderConsumptionMonthlyStats() {
+        const container = document.getElementById('consumptionMonthlyStats');
+        if (inventory.length === 0) {
             container.innerHTML = `
                 <div class="empty-state">
                     <div class="icon">📭</div>
-                    <div>لا يوجد بيانات للطلب</div>
-                    <div style="font-size:13px; margin-top:5px;">أكمل بيانات الاستهلاك في الشاشة السابقة أولاً</div>
+                    <div>لا يوجد بيانات</div>
+                    <div style="font-size:13px; margin-top:5px;">أضف المستلزمات في شاشة المخزون أولاً</div>
                 </div>`;
-            updateOrderStats(0, 0);
-            return;
-        }
-
-        orderItems = [];
-        let totalValue = 0;
-
-        consumption.forEach(c => {
-            const item = inventory.find(i => i.id === c.itemId);
-            if (!item) return;
-            const monthlyNeed = c.daily * 30;
-            const orderQty = Math.max(0, Math.ceil(monthlyNeed - item.qty));
-            if (orderQty > 0) {
-                const value = orderQty * item.price;
-                totalValue += value;
-                orderItems.push({ ...c, item, orderQty, value, monthlyNeed });
-            }
-        });
-
-        if (orderItems.length === 0) {
-            container.innerHTML = `
-                <div class="empty-state">
-                    <div class="icon">✅</div>
-                    <div>المخزون كافٍ لجميع الاحتياجات</div>
-                    <div style="font-size:13px; margin-top:5px;">لا تحتاج لطلبيات حالياً</div>
-                </div>`;
-            updateOrderStats(0, 0);
             return;
         }
 
         let html = `<table class="data-table">
             <thead><tr>
                 <th>الصنف</th>
-                <th>الاحتياج الشهري</th>
+                <th>الاستهلاك اليومي</th>
+                <th>الاستهلاك الشهري</th>
                 <th>المخزون</th>
-                <th>الكمية المطلوبة</th>
-                <th>سعر الوحدة</th>
-                <th>الإجمالي</th>
-                <th>إجراءات</th>
+                <th>الباقي بعد الشهر</th>
+                <th>التكلفة الشهرية</th>
+                <th>الحالة</th>
             </tr></thead><tbody>`;
 
-        orderItems.forEach((o, idx) => {
+        inventory.forEach(item => {
+            const c = consumption.find(con => con.itemId === item.id);
+            const daily = c ? (c.daily || 0) : 0;
+            const monthly = daily * 30;
+            const remaining = item.qty - monthly;
+            const monthlyCost = monthly * item.price;
+
+            let statusClass = 'badge-success';
+            let statusText = 'مخزون كافٍ';
+            if (remaining < 0) {
+                statusClass = 'badge-danger';
+                statusText = 'نقص مخزون';
+            } else if (remaining < monthly) {
+                statusClass = 'badge-warning';
+                statusText = 'مخزون منخفض';
+            }
+
             html += `<tr>
-                <td>${o.item.name}</td>
-                <td>${o.monthlyNeed.toFixed(2)} ${o.item.unit}</td>
-                <td>${o.item.qty} ${o.item.unit}</td>
-                <td><input type="number" value="${o.orderQty}" min="0" onchange="updateOrderQty(${idx}, this.value)" style="width:80px; padding:6px; border:1px solid #ddd; border-radius:6px; text-align:center;"></td>
-                <td>${o.item.price} ج.م</td>
-                <td id="orderVal_${idx}">${o.value.toFixed(2)} ج.م</td>
-                <td><button class="btn-delete" onclick="deleteOrderItem(${idx})">🗑️</button></td>
+                <td style="font-weight:600;">${item.name}</td>
+                <td>${daily.toFixed(2)} ${item.unit}</td>
+                <td style="font-weight:600; color:#667eea;">${monthly.toFixed(2)} ${item.unit}</td>
+                <td>${item.qty} ${item.unit}</td>
+                <td style="font-weight:600; color:${remaining < 0 ? '#c62828' : '#333'};">${remaining.toFixed(2)} ${item.unit}</td>
+                <td>${monthlyCost.toFixed(2)} ج.م</td>
+                <td><span class="badge ${statusClass}">${statusText}</span></td>
             </tr>`;
         });
 
-        html += `<tr style="background:#f8f9fa; font-weight:700;">
-            <td colspan="5" style="text-align:left;">إجمالي الطلبية:</td>
-            <td>${totalValue.toFixed(2)} ج.م</td>
-        </tr></tbody></table>`;
+        html += '</tbody></table>';
+        container.innerHTML = html;
+    }
+
+    // ========== ORDERS ==========
+    let orderItems = [];
+
+    function renderOrders() {
+        const container = document.getElementById('ordersTable');
+
+        // Calculate current order automatically using max(daily, yesterday)
+        // so it doesn't disappear after saving daily consumption
+        orderItems = [];
+        let totalValue = 0;
+
+        inventory.forEach(item => {
+            const c = consumption.find(con => con.itemId === item.id);
+            // Use max of daily or yesterday so order stays visible after save
+            const daily = c ? Math.max(c.daily || 0, c.yesterday || 0) : 0;
+            const monthlyNeed = daily * 30;
+            const orderQty = Math.max(0, Math.ceil(monthlyNeed - item.qty));
+            if (orderQty > 0) {
+                const value = orderQty * item.price;
+                totalValue += value;
+                orderItems.push({ item, orderQty, value, monthlyNeed, daily });
+            }
+        });
+
+        let html = '';
+
+        // Current auto-calculated order
+        html += `<div style="margin-bottom:15px; text-align:center; display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
+            <button class="btn-add" onclick="saveOrder()" style="background:linear-gradient(135deg, #4caf50 0%, #2e7d32 100%);">
+                💾 حفظ الطلبية الحالية
+            </button>
+            <button class="btn-add" onclick="clearCurrentOrder()" style="background:linear-gradient(135deg, #ff9800 0%, #f57c00 100%);">
+                🧹 مسح الطلبية الحالية
+            </button>
+        </div>`;
+
+        if (orderItems.length === 0) {
+            html += `
+                <div class="empty-state">
+                    <div class="icon">✅</div>
+                    <div>المخزون كافٍ لجميع الاحتياجات الشهرية</div>
+                    <div style="font-size:13px; margin-top:5px;">لا تحتاج لطلبيات حالياً</div>
+                </div>`;
+        } else {
+            html += `<table class="data-table">
+                <thead><tr>
+                    <th>الصنف</th>
+                    <th>الاستهلاك اليومي</th>
+                    <th>الاستهلاك الشهري</th>
+                    <th>المخزون</th>
+                    <th>الكمية المطلوبة</th>
+                    <th>سعر الوحدة</th>
+                    <th>الإجمالي</th>
+                    <th>إجراءات</th>
+                </tr></thead><tbody>`;
+
+            orderItems.forEach((o, idx) => {
+                html += `<tr>
+                    <td style="font-weight:600;">${o.item.name}</td>
+                    <td>${o.daily.toFixed(2)} ${o.item.unit}</td>
+                    <td style="font-weight:600; color:#667eea;">${o.monthlyNeed.toFixed(2)} ${o.item.unit}</td>
+                    <td>${o.item.qty} ${o.item.unit}</td>
+                    <td><input type="number" value="${o.orderQty}" min="0" onchange="updateOrderQty(${idx}, this.value)" style="width:80px; padding:6px; border:1px solid #ddd; border-radius:6px; text-align:center;"> ${o.item.unit}</td>
+                    <td>${o.item.price} ج.م</td>
+                    <td id="orderVal_${idx}">${o.value.toFixed(2)} ج.م</td>
+                    <td><button class="btn-delete" onclick="deleteOrderItem(${idx})">🗑️</button></td>
+                </tr>`;
+            });
+
+            html += `<tr style="background:#f8f9fa; font-weight:700;">
+                <td colspan="6" style="text-align:left;">إجمالي الطلبية الحالية:</td>
+                <td style="font-weight:800; color:#667eea;">${totalValue.toFixed(2)} ج.م</td>
+                <td></td>
+            </tr></tbody></table>`;
+        }
+
+        updateOrderStats(orderItems.length, totalValue);
+
+        // Saved orders section
+        if (orders.length > 0) {
+            html += `<div style="margin-top: 30px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #667eea;">
+                    <h3 style="color: #333; margin: 0;">📋 الطلبيات المحفوظة</h3>
+                    <button class="btn-delete" onclick="deleteAllOrders()" style="padding: 8px 16px; font-size: 13px;">
+                        🗑️ مسح كل الطلبيات
+                    </button>
+                </div>`;
+
+            orders.slice().reverse().forEach((order, idx) => {
+                const realIdx = orders.length - 1 - idx;
+                html += `<div style="background: #f8f9fa; border-radius: 12px; padding: 15px; margin-bottom: 15px; border: 1px solid #e0e0e0;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                        <strong style="color:#667eea;">📦 طلبية #${realIdx + 1} — ${order.date}</strong>
+                        <button class="btn-delete" onclick="deleteOrder(${order.id})">🗑️ حذف</button>
+                    </div>
+                    <table class="data-table" style="margin-top: 0; font-size:13px;">
+                        <thead><tr>
+                            <th>الصنف</th>
+                            <th>الكمية المطلوبة</th>
+                            <th>السعر</th>
+                            <th>الإجمالي</th>
+                        </tr></thead><tbody>`;
+
+                order.items.forEach(item => {
+                    html += `<tr>
+                        <td>${item.name}</td>
+                        <td>${item.orderQty} ${item.unit}</td>
+                        <td>${item.price} ج.م</td>
+                        <td style="font-weight:600;">${item.value.toFixed(2)} ج.م</td>
+                    </tr>`;
+                });
+
+                html += `<tr style="background: #e8e8e8; font-weight: 700;">
+                    <td colspan="3" style="text-align:left;">إجمالي الطلبية</td>
+                    <td style="font-weight:800; color:#667eea;">${order.totalValue.toFixed(2)} ج.م</td>
+                </tr></tbody></table></div>`;
+            });
+
+            html += `</div>`;
+        }
 
         container.innerHTML = html;
-        updateOrderStats(orderItems.length, totalValue);
     }
 
     function updateOrderStats(items, total) {
@@ -1238,6 +1360,65 @@
         if (!confirm('هل تريد حذف هذا الصنف من الطلبية؟')) return;
         orderItems.splice(idx, 1);
         renderOrders();
+    };
+
+    window.saveOrder = async function() {
+        if (orderItems.length === 0) {
+            alert('⚠️ لا يوجد أصناف في الطلبية الحالية للحفظ');
+            return;
+        }
+        const today = new Date().toISOString().split('T')[0];
+        orders.push({
+            id: Date.now(),
+            date: today,
+            items: orderItems.map(o => ({
+                name: o.item.name,
+                unit: o.item.unit,
+                price: o.item.price,
+                monthlyNeed: o.monthlyNeed,
+                orderQty: o.orderQty,
+                value: o.value
+            })),
+            totalValue: orderItems.reduce((sum, o) => sum + o.value, 0)
+        });
+        await saveToFirebase();
+        alert('✅ تم حفظ الطلبية بنجاح');
+        renderOrders();
+    };
+
+    window.deleteOrder = async function(id) {
+        if (!confirm('هل تريد حذف هذه الطلبية المحفوظة؟')) return;
+        orders = orders.filter(o => o.id !== id);
+        await saveToFirebase();
+        renderAll();
+    };
+
+    window.clearCurrentOrder = async function() {
+        if (orderItems.length === 0) {
+            alert('⚠️ لا يوجد طلبية حالية للمسح');
+            return;
+        }
+        if (!confirm('هل تريد مسح الطلبية الحالية؟ سيتم وضع الاستهلاك اليومي = 0 لجميع الأصناف.')) return;
+
+        // Set all daily consumption to 0 so current order becomes empty
+        consumption.forEach(c => {
+            c.daily = 0;
+        });
+        await saveToFirebase();
+        renderAll();
+        alert('✅ تم مسح الطلبية الحالية');
+    };
+
+    window.deleteAllOrders = async function() {
+        if (orders.length === 0) {
+            alert('⚠️ لا يوجد طلبيات محفوظة');
+            return;
+        }
+        if (!confirm('هل تريد حذف جميع الطلبيات المحفوظة؟')) return;
+        orders = [];
+        await saveToFirebase();
+        renderAll();
+        alert('✅ تم حذف جميع الطلبيات المحفوظة');
     };
 
     // ========== DEBTS ==========
