@@ -779,7 +779,7 @@
                     inventory = data.inventory || [];
                     consumption = data.consumption || [];
                     debts = data.debts || [];
-                orders = data.orders || [];
+                    orders = data.orders || [];
                     await saveToFirebase();
                 }
             }
@@ -805,7 +805,7 @@
             inventory = data.inventory || [];
             consumption = data.consumption || [];
             debts = data.debts || [];
-                orders = data.orders || [];
+            orders = data.orders || [];
             renderAll();
             updateSyncStatus(true, "☁️ متزامن تلقائياً");
         }
@@ -1153,7 +1153,6 @@
         renderAll();
     };
 
-
     function renderConsumptionMonthlyStats() {
         const container = document.getElementById('consumptionMonthlyStats');
         if (inventory.length === 0) {
@@ -1215,13 +1214,13 @@
     function renderOrders() {
         const container = document.getElementById('ordersTable');
 
-        // Calculate current order automatically
+        // Calculate current order using max(daily, yesterday) so it stays after save
         orderItems = [];
         let totalValue = 0;
 
         inventory.forEach(item => {
             const c = consumption.find(con => con.itemId === item.id);
-            const daily = c ? (c.daily || 0) : 0;
+            const daily = c ? Math.max(c.daily || 0, c.yesterday || 0) : 0;
             const monthlyNeed = daily * 30;
             const orderQty = Math.max(0, Math.ceil(monthlyNeed - item.qty));
             if (orderQty > 0) {
@@ -1233,10 +1232,13 @@
 
         let html = '';
 
-        // Current auto-calculated order
-        html += `<div style="margin-bottom:15px; text-align:center;">
+        // Action buttons
+        html += `<div style="margin-bottom:15px; text-align:center; display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
             <button class="btn-add" onclick="saveOrder()" style="background:linear-gradient(135deg, #4caf50 0%, #2e7d32 100%);">
                 💾 حفظ الطلبية الحالية
+            </button>
+            <button class="btn-add" onclick="clearCurrentOrder()" style="background:linear-gradient(135deg, #ff9800 0%, #f57c00 100%);">
+                🧹 مسح الطلبية الحالية
             </button>
         </div>`;
 
@@ -1285,9 +1287,12 @@
         // Saved orders section
         if (orders.length > 0) {
             html += `<div style="margin-top: 30px;">
-                <h3 style="color: #333; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #667eea;">
-                    📋 الطلبيات المحفوظة
-                </h3>`;
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #667eea;">
+                    <h3 style="color: #333; margin: 0;">📋 الطلبيات المحفوظة</h3>
+                    <button class="btn-delete" onclick="deleteAllOrders()" style="padding: 8px 16px; font-size: 13px;">
+                        🗑️ مسح كل الطلبيات
+                    </button>
+                </div>`;
 
             orders.slice().reverse().forEach((order, idx) => {
                 const realIdx = orders.length - 1 - idx;
@@ -1383,6 +1388,33 @@
         orders = orders.filter(o => o.id !== id);
         await saveToFirebase();
         renderAll();
+    };
+
+    window.clearCurrentOrder = async function() {
+        if (orderItems.length === 0) {
+            alert('⚠️ لا يوجد طلبية حالية للمسح');
+            return;
+        }
+        if (!confirm('هل تريد مسح الطلبية الحالية؟ سيتم وضع الاستهلاك اليومي = 0 لجميع الأصناف.')) return;
+
+        consumption.forEach(c => {
+            c.daily = 0;
+        });
+        await saveToFirebase();
+        renderAll();
+        alert('✅ تم مسح الطلبية الحالية');
+    };
+
+    window.deleteAllOrders = async function() {
+        if (orders.length === 0) {
+            alert('⚠️ لا يوجد طلبيات محفوظة');
+            return;
+        }
+        if (!confirm('هل تريد حذف جميع الطلبيات المحفوظة؟')) return;
+        orders = [];
+        await saveToFirebase();
+        renderAll();
+        alert('✅ تم حذف جميع الطلبيات المحفوظة');
     };
 
     // ========== DEBTS ==========
