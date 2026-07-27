@@ -393,6 +393,206 @@
         <button class="btn-login" onclick="login()">
             🔐 تسجيل الدخول
         </button>
+
+        <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e0e0e0; text-align: center;">
+            <button onclick="showAdminLogin()" style="background: none; border: 2px solid #1565C0; color: #1565C0; padding: 10px 25px; border-radius: 12px; cursor: pointer; font-size: 14px; font-weight: 700; transition: all 0.3s;">
+                👨‍💼 دخول الإدارة
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ===== ADMIN LOGIN SCREEN ===== -->
+<div class="login-screen" id="adminLoginScreen" style="display:none;">
+    <div class="login-box">
+        <div class="login-icon">👨‍💼</div>
+        <h1>لوحة تحكم الإدارة</h1>
+        <p class="subtitle">نظام إدارة المعمل - دخول المشرف</p>
+
+        <div class="error-msg" id="adminErrorMsg">
+            ❌ كلمة المرور غير صحيحة
+        </div>
+
+        <div class="form-group">
+            <label for="adminPassword">🔒 كلمة مرور الإدارة</label>
+            <input type="password" id="adminPassword" placeholder="أدخل كلمة مرور المشرف">
+        </div>
+
+        <button class="btn-login" onclick="adminLogin()" style="background: linear-gradient(135deg, #1565C0 0%, #FF9800 100%);">
+            🔐 دخول الإدارة
+        </button>
+
+        <div style="margin-top: 20px; text-align: center;">
+            <button onclick="showUserLogin()" style="background: none; border: none; color: #1565C0; cursor: pointer; font-size: 14px; text-decoration: underline;">
+                ← العودة لتسجيل الدخول العادي
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ===== ADMIN DASHBOARD ===== -->
+<div class="dashboard" id="adminDashboard" style="display:none;">
+    <div class="top-bar">
+        <div style="display:flex; align-items:center; gap:12px;">
+            <img src="logo.png" alt="DR SAIKR LAB" style="height:40px; border-radius:8px;">
+        </div>
+        <div class="nav-tabs">
+            <button class="nav-tab active" onclick="showAdminTab('overview', this)">📊 نظرة عامة</button>
+            <button class="nav-tab" onclick="showAdminTab('users', this)">👥 المستخدمين</button>
+            <button class="nav-tab" onclick="showAdminTab('reports', this)">📈 التقارير</button>
+            <button class="nav-tab" onclick="showAdminTab('settings', this)">⚙️ الإعدادات</button>
+        </div>
+        <button class="btn-logout" onclick="adminLogout()">🚪 تسجيل الخروج</button>
+    </div>
+
+    <div class="main-content">
+        <!-- OVERVIEW TAB -->
+        <div class="tab-content active" id="adminOverviewTab">
+            <div class="content-card">
+                <h2>📊 نظرة عامة على النظام</h2>
+
+                <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
+                    <div class="stat-box" style="background: linear-gradient(135deg, #1565C0 0%, #0d47a1 100%);">
+                        <div class="number" id="adminTotalItems">0</div>
+                        <div class="label">إجمالي الأصناف</div>
+                    </div>
+                    <div class="stat-box" style="background: linear-gradient(135deg, #FF9800 0%, #e65100 100%);">
+                        <div class="number" id="adminTotalValue">0</div>
+                        <div class="label">قيمة المخزون</div>
+                    </div>
+                    <div class="stat-box" style="background: linear-gradient(135deg, #00838f 0%, #006064 100%);">
+                        <div class="number" id="adminFlashCount">0</div>
+                        <div class="label">أصناف الفلاش</div>
+                    </div>
+                    <div class="stat-box" style="background: linear-gradient(135deg, #2e7d32 0%, #1b5e20 100%);">
+                        <div class="number" id="adminChemCount">0</div>
+                        <div class="label">أصناف الكيميا</div>
+                    </div>
+                    <div class="stat-box" style="background: linear-gradient(135deg, #7b1fa2 0%, #4a148c 100%);">
+                        <div class="number" id="adminCardCount">0</div>
+                        <div class="label">أصناف الكروت</div>
+                    </div>
+                    <div class="stat-box" style="background: linear-gradient(135deg, #c62828 0%, #b71c1c 100%);">
+                        <div class="number" id="adminLowStock">0</div>
+                        <div class="label">أصناف منخفضة</div>
+                    </div>
+                </div>
+
+                <h3 style="color:#333; margin: 30px 0 15px; padding-bottom:10px; border-bottom:2px solid #1565C0;">
+                    📦 أحدث الأصناف المضافة
+                </h3>
+                <div id="adminLatestItems"></div>
+
+                <h3 style="color:#333; margin: 30px 0 15px; padding-bottom:10px; border-bottom:2px solid #FF9800;">
+                    ⚠️ أصناف تحتاج طلبية (مخزون أقل من 7 أيام)
+                </h3>
+                <div id="adminLowStockItems"></div>
+            </div>
+        </div>
+
+        <!-- USERS TAB -->
+        <div class="tab-content" id="adminUsersTab">
+            <div class="content-card">
+                <h2>👥 إدارة المستخدمين</h2>
+                <div class="hint-box">
+                    💡 يمكنك إضافة مستخدمين جدد وتعديل صلاحياتهم. كلمة المرور الافتراضية للمستخدمين الجدد هي "user123".
+                </div>
+
+                <div class="input-row">
+                    <div class="input-group" style="flex:1;">
+                        <label>اسم المستخدم</label>
+                        <input type="text" id="newUsername" placeholder="مثال: أحمد">
+                    </div>
+                    <div class="input-group" style="flex:1;">
+                        <label>الدور</label>
+                        <select id="newUserRole">
+                            <option value="user">مستخدم عادي</option>
+                            <option value="admin">مشرف</option>
+                        </select>
+                    </div>
+                    <button class="btn-add" onclick="addUser()">➕ إضافة مستخدم</button>
+                </div>
+
+                <div id="usersTable"></div>
+            </div>
+        </div>
+
+        <!-- REPORTS TAB -->
+        <div class="tab-content" id="adminReportsTab">
+            <div class="content-card">
+                <h2>📈 التقارير والإحصائيات</h2>
+
+                <div class="stats-grid" style="grid-template-columns: repeat(3, 1fr);">
+                    <div class="stat-box">
+                        <div class="number" id="reportTotalConsumption">0</div>
+                        <div class="label">إجمالي الاستهلاك اليومي</div>
+                    </div>
+                    <div class="stat-box" style="background: linear-gradient(135deg, #FF9800 0%, #e65100 100%);">
+                        <div class="number" id="reportTotalOrders">0</div>
+                        <div class="label">عدد الطلبيات</div>
+                    </div>
+                    <div class="stat-box" style="background: linear-gradient(135deg, #c62828 0%, #b71c1c 100%);">
+                        <div class="number" id="reportTotalDebt">0</div>
+                        <div class="label">إجمالي المديونية</div>
+                    </div>
+                </div>
+
+                <h3 style="color:#333; margin: 30px 0 15px; padding-bottom:10px; border-bottom:2px solid #1565C0;">
+                    📊 توزيع الأصناف حسب النوع
+                </h3>
+                <div id="categoryDistribution"></div>
+
+                <h3 style="color:#333; margin: 30px 0 15px; padding-bottom:10px; border-bottom:2px solid #FF9800;">
+                    💰 أكثر 5 أصناف استهلاكاً
+                </h3>
+                <div id="topConsumedItems"></div>
+            </div>
+        </div>
+
+        <!-- SETTINGS TAB -->
+        <div class="tab-content" id="adminSettingsTab">
+            <div class="content-card">
+                <h2>⚙️ إعدادات النظام</h2>
+
+                <div class="hint-box">
+                    💡 يمكنك تغيير كلمات المرور وإعدادات النظام الأساسية.
+                </div>
+
+                <h3 style="color:#333; margin: 20px 0 15px; padding-bottom:10px; border-bottom:2px solid #1565C0;">
+                    🔐 تغيير كلمة مرور الإدارة
+                </h3>
+                <div class="input-row">
+                    <div class="input-group">
+                        <label>كلمة المرور الحالية</label>
+                        <input type="password" id="currentAdminPass" placeholder="أدخل كلمة المرور الحالية">
+                    </div>
+                    <div class="input-group">
+                        <label>كلمة المرور الجديدة</label>
+                        <input type="password" id="newAdminPass" placeholder="أدخل كلمة المرور الجديدة">
+                    </div>
+                    <div class="input-group">
+                        <label>تأكيد كلمة المرور</label>
+                        <input type="password" id="confirmAdminPass" placeholder="أعد كتابة كلمة المرور">
+                    </div>
+                    <button class="btn-add" onclick="changeAdminPassword()" style="margin-top: 22px;">💾 حفظ</button>
+                </div>
+
+                <div id="passChangeMsg" style="margin-top:15px; padding:12px; border-radius:8px; display:none;"></div>
+
+                <h3 style="color:#333; margin: 30px 0 15px; padding-bottom:10px; border-bottom:2px solid #FF9800;">
+                    🗄️ النسخ الاحتياطي
+                </h3>
+                <div style="display:flex; gap:15px; flex-wrap:wrap;">
+                    <button class="btn-add" onclick="exportData()" style="background: linear-gradient(135deg, #4caf50 0%, #2e7d32 100%);">
+                        📥 تصدير البيانات (JSON)
+                    </button>
+                    <button class="btn-add" onclick="document.getElementById('importFile').click()" style="background: linear-gradient(135deg, #FF9800 0%, #e65100 100%);">
+                        📤 استيراد البيانات
+                    </button>
+                    <input type="file" id="importFile" accept=".json" style="display:none;" onchange="importData(this)">
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -754,8 +954,10 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // ========== PASSWORD ==========
+    // ========== PASSWORDS ==========
     const CORRECT_PASSWORD = "Asmaa@1999";
+    let ADMIN_PASSWORD = localStorage.getItem('admin_pass') || "Admin@2024";
+    let users = JSON.parse(localStorage.getItem('lab_users') || '[]');
 
     // ========== DATA ==========
     let inventory = [];
@@ -840,6 +1042,348 @@
         icon.textContent = online ? '☁️' : '⚠️';
         txt.textContent = text;
     }
+
+    // ========== ADMIN LOGIN / LOGOUT ==========
+    window.showAdminLogin = function() {
+        document.getElementById('loginScreen').style.display = 'none';
+        document.getElementById('adminLoginScreen').style.display = 'flex';
+        document.getElementById('adminPassword').value = '';
+        document.getElementById('adminPassword').focus();
+    };
+
+    window.showUserLogin = function() {
+        document.getElementById('adminLoginScreen').style.display = 'none';
+        document.getElementById('loginScreen').style.display = 'flex';
+        document.getElementById('password').value = '';
+    };
+
+    window.adminLogin = function() {
+        const pwd = document.getElementById('adminPassword').value;
+        if (pwd === ADMIN_PASSWORD) {
+            document.getElementById('adminLoginScreen').style.display = 'none';
+            document.getElementById('adminDashboard').style.display = 'block';
+            document.getElementById('adminErrorMsg').classList.remove('show');
+            renderAdminOverview();
+        } else {
+            document.getElementById('adminErrorMsg').classList.add('show');
+            document.getElementById('adminPassword').value = '';
+            document.getElementById('adminPassword').focus();
+        }
+    };
+
+    document.getElementById('adminPassword').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') window.adminLogin();
+    });
+
+    window.adminLogout = function() {
+        document.getElementById('adminLoginScreen').style.display = 'flex';
+        document.getElementById('adminDashboard').style.display = 'none';
+        document.getElementById('adminPassword').value = '';
+    };
+
+    window.showAdminTab = function(tab, btn) {
+        document.querySelectorAll('#adminDashboard .tab-content').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('#adminDashboard .nav-tab').forEach(b => b.classList.remove('active'));
+        document.getElementById('admin' + tab.charAt(0).toUpperCase() + tab.slice(1) + 'Tab').classList.add('active');
+        btn.classList.add('active');
+        if (tab === 'overview') renderAdminOverview();
+        if (tab === 'users') renderUsers();
+        if (tab === 'reports') renderReports();
+    };
+
+    // ========== ADMIN OVERVIEW ==========
+    function renderAdminOverview() {
+        // Total items
+        document.getElementById('adminTotalItems').textContent = inventory.length;
+
+        // Total value
+        const totalValue = inventory.reduce((sum, i) => sum + (i.price * i.qty), 0);
+        document.getElementById('adminTotalValue').textContent = totalValue.toFixed(0) + ' ج.م';
+
+        // Category counts
+        const flashCount = inventory.filter(i => i.category === 'فلاش').length;
+        const chemCount = inventory.filter(i => i.category === 'كيميا').length;
+        const cardCount = inventory.filter(i => i.category === 'كروت').length;
+        document.getElementById('adminFlashCount').textContent = flashCount;
+        document.getElementById('adminChemCount').textContent = chemCount;
+        document.getElementById('adminCardCount').textContent = cardCount;
+
+        // Low stock items
+        let lowStock = 0;
+        inventory.forEach(item => {
+            const c = consumption.find(con => con.itemId === item.id);
+            const daily = c ? (c.daily || 0) : 0;
+            const daysLeft = daily > 0 ? Math.floor(item.qty / daily) : 999;
+            if (daysLeft < 7) lowStock++;
+        });
+        document.getElementById('adminLowStock').textContent = lowStock;
+
+        // Latest items (last 5)
+        const latest = [...inventory].slice(-5).reverse();
+        let latestHtml = `<table class="data-table"><thead><tr><th>#</th><th>الاسم</th><th>النوع</th><th>الكمية</th><th>القيمة</th></tr></thead><tbody>`;
+        latest.forEach((item, i) => {
+            const catColor = item.category === 'فلاش' ? '#00838f' : item.category === 'كيميا' ? '#2e7d32' : item.category === 'كروت' ? '#7b1fa2' : '#999';
+            const catBg = item.category === 'فلاش' ? '#e0f7fa' : item.category === 'كيميا' ? '#e8f5e9' : item.category === 'كروت' ? '#f3e5f5' : '#f5f5f5';
+            latestHtml += `<tr>
+                <td>${i+1}</td>
+                <td>${item.name}</td>
+                <td><span style="background:${catBg}; color:${catColor}; padding:4px 12px; border-radius:20px; font-size:12px; font-weight:700;">${item.category || 'غير محدد'}</span></td>
+                <td>${item.qty} ${item.unit}</td>
+                <td>${(item.price * item.qty).toFixed(2)} ج.م</td>
+            </tr>`;
+        });
+        latestHtml += '</tbody></table>';
+        document.getElementById('adminLatestItems').innerHTML = latestHtml || '<div style="text-align:center; color:#999; padding:20px;">لا توجد أصناف</div>';
+
+        // Low stock table
+        const lowStockItems = [];
+        inventory.forEach(item => {
+            const c = consumption.find(con => con.itemId === item.id);
+            const daily = c ? (c.daily || 0) : 0;
+            const daysLeft = daily > 0 ? Math.floor(item.qty / daily) : 999;
+            if (daysLeft < 7) {
+                lowStockItems.push({...item, daysLeft, daily});
+            }
+        });
+
+        if (lowStockItems.length === 0) {
+            document.getElementById('adminLowStockItems').innerHTML = '<div style="text-align:center; color:#4caf50; padding:20px; font-weight:700;">✅ جميع الأصناف بخير - لا يوجد مخزون منخفض</div>';
+        } else {
+            let lowHtml = `<table class="data-table"><thead><tr><th>الصنف</th><th>النوع</th><th>المخزون</th><th>الاستهلاك اليومي</th><th>الباقي</th><th>الحالة</th></tr></thead><tbody>`;
+            lowStockItems.forEach(item => {
+                const catColor = item.category === 'فلاش' ? '#00838f' : item.category === 'كيميا' ? '#2e7d32' : item.category === 'كروت' ? '#7b1fa2' : '#999';
+                const catBg = item.category === 'فلاش' ? '#e0f7fa' : item.category === 'كيميا' ? '#e8f5e9' : item.category === 'كروت' ? '#f3e5f5' : '#f5f5f5';
+                const statusClass = item.daysLeft < 3 ? 'badge-danger' : 'badge-warning';
+                const statusText = item.daysLeft < 3 ? '⚠️ نفاد قريب' : '⏰ منخفض';
+                lowHtml += `<tr>
+                    <td style="font-weight:600;">${item.name}</td>
+                    <td><span style="background:${catBg}; color:${catColor}; padding:4px 12px; border-radius:20px; font-size:12px; font-weight:700;">${item.category || 'غير محدد'}</span></td>
+                    <td>${item.qty} ${item.unit}</td>
+                    <td>${item.daily} ${item.unit}/يوم</td>
+                    <td style="font-weight:700; color:#c62828;">${item.daysLeft} يوم</td>
+                    <td><span class="badge ${statusClass}">${statusText}</span></td>
+                </tr>`;
+            });
+            lowHtml += '</tbody></table>';
+            document.getElementById('adminLowStockItems').innerHTML = lowHtml;
+        }
+    }
+
+    // ========== USERS MANAGEMENT ==========
+    window.addUser = function() {
+        const name = document.getElementById('newUsername').value.trim();
+        const role = document.getElementById('newUserRole').value;
+        if (!name) { alert('أدخل اسم المستخدم'); return; }
+
+        users.push({
+            id: Date.now(),
+            name: name,
+            role: role,
+            password: 'user123',
+            createdAt: new Date().toISOString().split('T')[0]
+        });
+        localStorage.setItem('lab_users', JSON.stringify(users));
+        document.getElementById('newUsername').value = '';
+        renderUsers();
+        alert('✅ تم إضافة المستخدم بنجاح - كلمة المرور: user123');
+    };
+
+    window.deleteUser = function(id) {
+        if (!confirm('هل أنت متأكد من حذف هذا المستخدم؟')) return;
+        users = users.filter(u => u.id !== id);
+        localStorage.setItem('lab_users', JSON.stringify(users));
+        renderUsers();
+    };
+
+    window.resetUserPass = function(id) {
+        const user = users.find(u => u.id === id);
+        if (user) {
+            user.password = 'user123';
+            localStorage.setItem('lab_users', JSON.stringify(users));
+            alert('✅ تم إعادة تعيين كلمة المرور لـ ' + user.name + ' (user123)');
+        }
+    };
+
+    function renderUsers() {
+        const container = document.getElementById('usersTable');
+        if (users.length === 0) {
+            container.innerHTML = '<div style="text-align:center; color:#999; padding:30px;">لا يوجد مستخدمين مسجلين</div>';
+            return;
+        }
+        let html = `<table class="data-table"><thead><tr><th>#</th><th>الاسم</th><th>الدور</th><th>تاريخ الإنشاء</th><th>إجراءات</th></tr></thead><tbody>`;
+        users.forEach((u, i) => {
+            const roleBadge = u.role === 'admin' 
+                ? '<span style="background:#fff3e0; color:#e65100; padding:4px 12px; border-radius:20px; font-size:12px; font-weight:700;">👨‍💼 مشرف</span>'
+                : '<span style="background:#e3f2fd; color:#1565C0; padding:4px 12px; border-radius:20px; font-size:12px; font-weight:700;">👤 مستخدم</span>';
+            html += `<tr>
+                <td>${i+1}</td>
+                <td style="font-weight:600;">${u.name}</td>
+                <td>${roleBadge}</td>
+                <td>${u.createdAt}</td>
+                <td>
+                    <button class="btn-delete" onclick="resetUserPass(${u.id})" style="background:#FF9800; margin-left:5px;">🔁 إعادة تعيين</button>
+                    <button class="btn-delete" onclick="deleteUser(${u.id})">🗑️ حذف</button>
+                </td>
+            </tr>`;
+        });
+        html += '</tbody></table>';
+        container.innerHTML = html;
+    }
+
+    // ========== REPORTS ==========
+    function renderReports() {
+        // Total consumption
+        const totalCons = consumption.reduce((sum, c) => sum + (c.daily || 0), 0);
+        document.getElementById('reportTotalConsumption').textContent = totalCons.toFixed(2);
+
+        // Total orders
+        document.getElementById('reportTotalOrders').textContent = orders.length;
+
+        // Total debt
+        const totalDebt = debts.length > 0 ? debts[debts.length - 1].remaining : 0;
+        document.getElementById('reportTotalDebt').textContent = totalDebt.toFixed(2) + ' ج.م';
+
+        // Category distribution
+        const flashCount = inventory.filter(i => i.category === 'فلاش').length;
+        const chemCount = inventory.filter(i => i.category === 'كيميا').length;
+        const cardCount = inventory.filter(i => i.category === 'كروت').length;
+        const otherCount = inventory.length - flashCount - chemCount - cardCount;
+
+        const distHtml = `
+            <div style="display:flex; gap:15px; flex-wrap:wrap; justify-content:center; margin:20px 0;">
+                <div style="background:#e0f7fa; color:#00838f; padding:20px 30px; border-radius:16px; text-align:center; min-width:120px;">
+                    <div style="font-size:32px; font-weight:800;">${flashCount}</div>
+                    <div style="font-size:14px; font-weight:600;">🔵 فلاش</div>
+                </div>
+                <div style="background:#e8f5e9; color:#2e7d32; padding:20px 30px; border-radius:16px; text-align:center; min-width:120px;">
+                    <div style="font-size:32px; font-weight:800;">${chemCount}</div>
+                    <div style="font-size:14px; font-weight:600;">🟢 كيميا</div>
+                </div>
+                <div style="background:#f3e5f5; color:#7b1fa2; padding:20px 30px; border-radius:16px; text-align:center; min-width:120px;">
+                    <div style="font-size:32px; font-weight:800;">${cardCount}</div>
+                    <div style="font-size:14px; font-weight:600;">🟣 كروت</div>
+                </div>
+                ${otherCount > 0 ? `<div style="background:#f5f5f5; color:#666; padding:20px 30px; border-radius:16px; text-align:center; min-width:120px;">
+                    <div style="font-size:32px; font-weight:800;">${otherCount}</div>
+                    <div style="font-size:14px; font-weight:600;">⚪ غير محدد</div>
+                </div>` : ''}
+            </div>
+        `;
+        document.getElementById('categoryDistribution').innerHTML = distHtml;
+
+        // Top consumed items
+        const topItems = [...consumption]
+            .filter(c => c.daily > 0)
+            .sort((a, b) => b.daily - a.daily)
+            .slice(0, 5);
+
+        if (topItems.length === 0) {
+            document.getElementById('topConsumedItems').innerHTML = '<div style="text-align:center; color:#999; padding:20px;">لا يوجد بيانات استهلاك</div>';
+        } else {
+            let topHtml = `<table class="data-table"><thead><tr><th>#</th><th>الصنف</th><th>النوع</th><th>الاستهلاك اليومي</th><th>التكلفة اليومية</th></tr></thead><tbody>`;
+            topItems.forEach((c, i) => {
+                const item = inventory.find(inv => inv.id === c.itemId);
+                if (item) {
+                    const catColor = item.category === 'فلاش' ? '#00838f' : item.category === 'كيميا' ? '#2e7d32' : item.category === 'كروت' ? '#7b1fa2' : '#999';
+                    const catBg = item.category === 'فلاش' ? '#e0f7fa' : item.category === 'كيميا' ? '#e8f5e9' : item.category === 'كروت' ? '#f3e5f5' : '#f5f5f5';
+                    topHtml += `<tr>
+                        <td>${i+1}</td>
+                        <td style="font-weight:600;">${item.name}</td>
+                        <td><span style="background:${catBg}; color:${catColor}; padding:4px 12px; border-radius:20px; font-size:12px; font-weight:700;">${item.category || 'غير محدد'}</span></td>
+                        <td style="font-weight:700; color:#1565C0;">${c.daily} ${item.unit}</td>
+                        <td>${(c.daily * item.price).toFixed(2)} ج.م</td>
+                    </tr>`;
+                }
+            });
+            topHtml += '</tbody></table>';
+            document.getElementById('topConsumedItems').innerHTML = topHtml;
+        }
+    }
+
+    // ========== SETTINGS ==========
+    window.changeAdminPassword = function() {
+        const current = document.getElementById('currentAdminPass').value;
+        const newPass = document.getElementById('newAdminPass').value;
+        const confirm = document.getElementById('confirmAdminPass').value;
+        const msgEl = document.getElementById('passChangeMsg');
+
+        if (current !== ADMIN_PASSWORD) {
+            msgEl.style.display = 'block';
+            msgEl.style.background = '#ffebee';
+            msgEl.style.color = '#c62828';
+            msgEl.textContent = '❌ كلمة المرور الحالية غير صحيحة';
+            return;
+        }
+        if (newPass.length < 6) {
+            msgEl.style.display = 'block';
+            msgEl.style.background = '#fff3e0';
+            msgEl.style.color = '#ef6c00';
+            msgEl.textContent = '⚠️ كلمة المرور الجديدة يجب أن تكون 6 أحرف على الأقل';
+            return;
+        }
+        if (newPass !== confirm) {
+            msgEl.style.display = 'block';
+            msgEl.style.background = '#ffebee';
+            msgEl.style.color = '#c62828';
+            msgEl.textContent = '❌ كلمتا المرور غير متطابقتين';
+            return;
+        }
+
+        ADMIN_PASSWORD = newPass;
+        localStorage.setItem('admin_pass', newPass);
+        msgEl.style.display = 'block';
+        msgEl.style.background = '#e8f5e9';
+        msgEl.style.color = '#2e7d32';
+        msgEl.textContent = '✅ تم تغيير كلمة المرور بنجاح';
+
+        document.getElementById('currentAdminPass').value = '';
+        document.getElementById('newAdminPass').value = '';
+        document.getElementById('confirmAdminPass').value = '';
+    };
+
+    window.exportData = function() {
+        const data = {
+            inventory, consumption, debts, orders, users,
+            exportDate: new Date().toISOString()
+        };
+        const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'lab_backup_' + new Date().toISOString().split('T')[0] + '.json';
+        a.click();
+        URL.revokeObjectURL(url);
+        alert('✅ تم تصدير البيانات بنجاح');
+    };
+
+    window.importData = function(input) {
+        const file = input.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = async function(e) {
+            try {
+                const data = JSON.parse(e.target.result);
+                if (confirm('⚠️ هل تريد استيراد هذه البيانات؟ سيتم استبدال جميع البيانات الحالية.')) {
+                    inventory = data.inventory || [];
+                    consumption = data.consumption || [];
+                    debts = data.debts || [];
+                    orders = data.orders || [];
+                    if (data.users) {
+                        users = data.users;
+                        localStorage.setItem('lab_users', JSON.stringify(users));
+                    }
+                    await saveToFirebase();
+                    renderAll();
+                    alert('✅ تم استيراد البيانات بنجاح');
+                }
+            } catch (err) {
+                alert('❌ خطأ في قراءة الملف: ' + err.message);
+            }
+        };
+        reader.readAsText(file);
+        input.value = '';
+    };
 
     // ========== LOGIN ==========
     window.login = function() {
