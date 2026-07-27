@@ -424,10 +424,25 @@
                     💡 أضف المستلزمات مع نوع الوحدة وسعر الوحدة والكمية المخزنة. يمكنك تعديل سعر الوحدة والكمية مباشرة من الجدول.
                 </div>
 
+                <div class="input-row" style="margin-bottom: 15px;">
+                    <div class="input-group" style="flex: 1;">
+                        <label>🔍 البحث في المخزون</label>
+                        <input type="text" id="invSearch" placeholder="اكتب اسم المستلزم..." oninput="renderInventory()" style="width: 100%;">
+                    </div>
+                </div>
+
                 <div class="input-row">
                     <div class="input-group" style="flex:2;">
                         <label>اسم المستلزم</label>
                         <input type="text" id="invName" placeholder="مثال: محلول NaCl">
+                    </div>
+                    <div class="input-group">
+                        <label>النوع</label>
+                        <select id="invCategory" style="background:#e0f7fa; color:#00838f; font-weight:700;">
+                            <option value="فلاش">🔵 فلاش</option>
+                            <option value="كروت">🟣 كروت</option>
+                            <option value="كيميا">🟢 كيميا</option>
+                        </select>
                     </div>
                     <div class="input-group">
                         <label>نوع الوحدة</label>
@@ -876,13 +891,14 @@
     // ========== INVENTORY ==========
     window.addInventory = async function() {
         const name = document.getElementById('invName').value.trim();
+        const category = document.getElementById('invCategory').value;
         const unit = document.getElementById('invUnit').value;
         const price = parseFloat(document.getElementById('invPrice').value) || 0;
         const qty = parseFloat(document.getElementById('invQty').value) || 0;
 
         if (!name) { alert('أدخل اسم المستلزم'); return; }
 
-        inventory.push({ id: Date.now(), name, unit, price, qty });
+        inventory.push({ id: Date.now(), name, category, unit, price, qty });
         await saveToFirebase();
 
         document.getElementById('invName').value = '';
@@ -894,12 +910,19 @@
 
     function renderInventory() {
         const container = document.getElementById('inventoryTable');
-        if (inventory.length === 0) {
+        const searchTerm = document.getElementById('invSearch') ? document.getElementById('invSearch').value.trim().toLowerCase() : '';
+
+        let filtered = inventory;
+        if (searchTerm) {
+            filtered = inventory.filter(i => i.name.toLowerCase().includes(searchTerm));
+        }
+
+        if (filtered.length === 0) {
             container.innerHTML = `
                 <div class="empty-state">
                     <div class="icon">📭</div>
-                    <div>لا يوجد مستلزمات مسجلة</div>
-                    <div style="font-size:13px; margin-top:5px;">أضف المستلزمات أولاً من الأعلى</div>
+                    <div>${searchTerm ? 'لا توجد نتائج مطابقة للبحث' : 'لا يوجد مستلزمات مسجلة'}</div>
+                    <div style="font-size:13px; margin-top:5px;">${searchTerm ? 'جرب كلمة بحث أخرى' : 'أضف المستلزمات أولاً من الأعلى'}</div>
                 </div>`;
             return;
         }
@@ -908,6 +931,7 @@
             <thead><tr>
                 <th>#</th>
                 <th>اسم المستلزم</th>
+                <th>النوع</th>
                 <th>نوع الوحدة</th>
                 <th>سعر الوحدة (جنيه)</th>
                 <th>الكمية المخزنة</th>
@@ -915,11 +939,18 @@
                 <th>إجراءات</th>
             </tr></thead><tbody>`;
 
-        inventory.forEach((item, i) => {
+        filtered.forEach((item, i) => {
             const total = (item.price * item.qty).toFixed(2);
             html += `<tr>
                 <td>${i + 1}</td>
                 <td>${item.name}</td>
+                <td>
+                    <select onchange="updateInvCategory(${item.id}, this.value)" style="padding:6px 10px; border:1px solid #ddd; border-radius:6px; font-size:14px; font-family:inherit; background:${item.category === 'فلاش' ? '#e0f7fa' : item.category === 'كيميا' ? '#e8f5e9' : item.category === 'كروت' ? '#f3e5f5' : '#fff'}; color:${item.category === 'فلاش' ? '#00838f' : item.category === 'كيميا' ? '#2e7d32' : item.category === 'كروت' ? '#7b1fa2' : '#333'}; font-weight:700;">
+                        <option value="فلاش" ${item.category === 'فلاش' ? 'selected' : ''}>🔵 فلاش</option>
+                        <option value="كروت" ${item.category === 'كروت' ? 'selected' : ''}>🟣 كروت</option>
+                        <option value="كيميا" ${item.category === 'كيميا' ? 'selected' : ''}>🟢 كيميا</option>
+                    </select>
+                </td>
                 <td>${item.unit}</td>
                 <td><input type="number" value="${item.price}" onchange="updateInvPrice(${item.id}, this.value)" step="0.01"></td>
                 <td><input type="number" value="${item.qty}" onchange="updateInvQty(${item.id}, this.value)"></td>
@@ -939,6 +970,10 @@
     window.updateInvQty = async function(id, val) {
         const item = inventory.find(i => i.id === id);
         if (item) { item.qty = parseFloat(val) || 0; await saveToFirebase(); renderAll(); }
+    };
+    window.updateInvCategory = async function(id, val) {
+        const item = inventory.find(i => i.id === id);
+        if (item) { item.category = val; await saveToFirebase(); renderAll(); }
     };
     window.deleteInv = async function(id) {
         if (!confirm('هل أنت متأكد من الحذف؟')) return;
@@ -1041,6 +1076,7 @@
 
     function renderConsumption() {
         const container = document.getElementById('consumptionTable');
+        const searchTerm = document.getElementById('consSearch') ? document.getElementById('consSearch').value.trim().toLowerCase() : '';
 
         let totalItems = 0, totalDaily = 0, totalCost = 0;
         let yesterdayHtml = `<table class="data-table">
@@ -1053,12 +1089,17 @@
             </tr></thead><tbody>`;
         let hasYesterday = false;
 
-        if (inventory.length === 0) {
+        let filteredInv = inventory;
+        if (searchTerm) {
+            filteredInv = inventory.filter(i => i.name.toLowerCase().includes(searchTerm));
+        }
+
+        if (filteredInv.length === 0) {
             container.innerHTML = `
                 <div class="empty-state">
                     <div class="icon">📭</div>
-                    <div>لا يوجد بيانات</div>
-                    <div style="font-size:13px; margin-top:5px;">أضف المستلزمات في شاشة المخزون أولاً</div>
+                    <div>${searchTerm ? 'لا توجد نتائج مطابقة للبحث' : 'لا يوجد بيانات'}</div>
+                    <div style="font-size:13px; margin-top:5px;">${searchTerm ? 'جرب كلمة بحث أخرى' : 'أضف المستلزمات في شاشة المخزون أولاً'}</div>
                 </div>`;
             document.getElementById('yesterdayTable').innerHTML = '<div style="text-align:center; color:#999; padding:20px;">لا يوجد سجل لليوم السابق</div>';
             updateConsumptionStats(0, 0, 0, 0);
@@ -1068,6 +1109,7 @@
         let html = `<table class="data-table">
             <thead><tr>
                 <th>الصنف</th>
+                <th>النوع</th>
                 <th>استهلاك اليوم السابق</th>
                 <th>الاستهلاك اليومي الحالي</th>
                 <th>المخزون</th>
@@ -1076,7 +1118,7 @@
                 <th>إجراءات</th>
             </tr></thead><tbody>`;
 
-        inventory.forEach(item => {
+        filteredInv.forEach(item => {
             const c = consumption.find(con => con.itemId === item.id);
             const yesterday = c ? (c.yesterday || 0) : 0;
             const daily = c ? c.daily : 0;
@@ -1091,6 +1133,7 @@
 
             html += `<tr>
                 <td>${item.name}</td>
+                <td><span class="badge" style="background:${item.category === 'فلاش' ? '#e0f7fa' : item.category === 'كيميا' ? '#e8f5e9' : item.category === 'كروت' ? '#f3e5f5' : '#f5f5f5'}; color:${item.category === 'فلاش' ? '#00838f' : item.category === 'كيميا' ? '#2e7d32' : item.category === 'كروت' ? '#7b1fa2' : '#999'}; font-weight:700;">${item.category === 'فلاش' ? '🔵 فلاش' : item.category === 'كيميا' ? '🟢 كيميا' : item.category === 'كروت' ? '🟣 كروت' : 'غير محدد'}</span></td>
                 <td>${yesterday > 0 ? yesterday + ' ' + item.unit : '-'}</td>
                 <td><input type="number" value="${daily}" onchange="updateConsumption(${item.id}, this.value)" style="width:80px; padding:6px; border:1px solid #ddd; border-radius:6px; text-align:center;"> ${item.unit}</td>
                 <td>${item.qty} ${item.unit}</td>
@@ -1173,6 +1216,7 @@
         let html = `<table class="data-table">
             <thead><tr>
                 <th>الصنف</th>
+                <th>النوع</th>
                 <th>الاستهلاك اليومي</th>
                 <th>الاستهلاك الشهري</th>
                 <th>المخزون</th>
@@ -1181,7 +1225,7 @@
                 <th>الحالة</th>
             </tr></thead><tbody>`;
 
-        inventory.forEach(item => {
+        filteredInv.forEach(item => {
             const c = consumption.find(con => con.itemId === item.id);
             const daily = c ? (c.daily || 0) : 0;
             const monthly = daily * 30;
@@ -1223,7 +1267,7 @@
         orderItems = [];
         let totalValue = 0;
 
-        inventory.forEach(item => {
+        filteredInv.forEach(item => {
             const c = consumption.find(con => con.itemId === item.id);
             const daily = c ? Math.max(c.daily || 0, c.yesterday || 0) : 0;
             const monthlyNeed = daily * 30;
@@ -1258,6 +1302,7 @@
             html += `<table class="data-table">
                 <thead><tr>
                     <th>الصنف</th>
+                    <th>النوع</th>
                     <th>الاستهلاك اليومي</th>
                     <th>الاستهلاك الشهري</th>
                     <th>المخزون</th>
