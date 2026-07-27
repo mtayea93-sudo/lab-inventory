@@ -4,12 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>معدل استهلاك واحتياج المعمل</title>
+    <link rel="icon" type="image/png" href="logo.png">
+
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #1565C0 0%, #FF9800 100%);
             min-height: 100vh;
             direction: rtl;
         }
@@ -23,7 +25,7 @@
             padding: 20px;
         }
         .login-box {
-            background: white;
+            background: #f0f7ff;
             border-radius: 24px;
             padding: 50px 40px;
             box-shadow: 0 25px 80px rgba(0,0,0,0.3);
@@ -78,13 +80,13 @@
         }
         .form-group input:focus {
             outline: none;
-            border-color: #667eea;
+            border-color: #1565C0;
             box-shadow: 0 0 0 4px rgba(102,126,234,0.1);
         }
         .btn-login {
             width: 100%;
             padding: 16px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #1565C0 0%, #FF9800 100%);
             color: white;
             border: none;
             border-radius: 14px;
@@ -103,7 +105,7 @@
         .dashboard { display: none; }
 
         .top-bar {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #1565C0 0%, #FF9800 100%);
             padding: 15px 30px;
             display: flex;
             justify-content: space-between;
@@ -157,8 +159,8 @@
         }
         .nav-tab:hover { background: rgba(255,255,255,0.35); }
         .nav-tab.active {
-            background: white;
-            color: #667eea;
+            background: #f0f7ff;
+            color: #1565C0;
             box-shadow: 0 4px 20px rgba(0,0,0,0.15);
         }
 
@@ -169,7 +171,7 @@
         }
 
         .content-card {
-            background: white;
+            background: #f0f7ff;
             border-radius: 24px;
             padding: 30px;
             box-shadow: 0 10px 40px rgba(0,0,0,0.1);
@@ -179,19 +181,19 @@
             color: #333;
             margin-bottom: 20px;
             padding-bottom: 15px;
-            border-bottom: 3px solid #667eea;
+            border-bottom: 3px solid #1565C0;
             display: flex;
             align-items: center;
             gap: 12px;
             font-size: 22px;
         }
         .hint-box {
-            background: #e3f2fd;
-            border-right: 4px solid #2196f3;
+            background: #dbeafe;
+            border-right: 4px solid #1565C0;
             padding: 15px 20px;
             border-radius: 12px;
             margin-bottom: 25px;
-            color: #1565c0;
+            color: #0d47a1;
             font-size: 14px;
         }
 
@@ -225,11 +227,11 @@
         }
         .input-group input:focus, .input-group select:focus {
             outline: none;
-            border-color: #667eea;
+            border-color: #1565C0;
         }
 
         .btn-add {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #1565C0 0%, #FF9800 100%);
             color: white;
             border: none;
             padding: 12px 28px;
@@ -267,7 +269,7 @@
             font-size: 14px;
         }
         .data-table th {
-            background: #f8f9fa;
+            background: #e3f0ff;
             color: #555;
             padding: 14px 12px;
             text-align: right;
@@ -279,7 +281,7 @@
             border-bottom: 1px solid #f0f0f0;
             vertical-align: middle;
         }
-        .data-table tr:hover { background: #fafafa; }
+        .data-table tr:hover { background: #e8f1fc; }
         .data-table input {
             width: 80px;
             padding: 6px 10px;
@@ -292,7 +294,7 @@
         .empty-state {
             text-align: center;
             padding: 50px 20px;
-            color: #999;
+            color: #1565C0;
         }
         .empty-state .icon { font-size: 50px; margin-bottom: 15px; }
 
@@ -304,7 +306,7 @@
             margin-bottom: 25px;
         }
         .stat-box {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #1565C0 0%, #FF9800 100%);
             color: white;
             border-radius: 16px;
             padding: 20px;
@@ -319,7 +321,7 @@
 
         .company-badge {
             display: inline-block;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #1565C0 0%, #FF9800 100%);
             color: white;
             padding: 8px 20px;
             border-radius: 20px;
@@ -345,7 +347,7 @@
             position: fixed;
             bottom: 20px;
             left: 20px;
-            background: white;
+            background: #f0f7ff;
             padding: 10px 20px;
             border-radius: 30px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.15);
@@ -397,6 +399,9 @@
 <!-- ===== DASHBOARD ===== -->
 <div class="dashboard" id="dashboard">
     <div class="top-bar">
+        <div style="display:flex; align-items:center; gap:12px;">
+            <img src="logo.png" alt="DR SAIKR LAB" style="height:40px; border-radius:8px;">
+        </div>
         <button class="btn-logout" onclick="logout()">🚪 تسجيل الخروج</button>
         <div class="nav-tabs">
             <button class="nav-tab active" onclick="showTab('inventory', this)">📦 المخزون</button>
@@ -406,7 +411,7 @@
             <button class="nav-tab" onclick="showTab('orders', this)">🛒 الطلبيات</button>
             <button class="nav-tab" onclick="showTab('debts', this)">💰 المديونية</button>
         </div>
-        <div class="user-info">👤 أسماء</div>
+        
     </div>
 
     <div class="main-content">
@@ -497,7 +502,7 @@
 
                 <!-- Yesterday Details Toggle -->
                 <div style="margin: 15px 0; text-align: center;">
-                    <button onclick="toggleYesterdayDetails()" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 10px 25px; border-radius: 12px; cursor: pointer; font-size: 14px; font-weight: 600;">
+                    <button onclick="toggleYesterdayDetails()" style="background: linear-gradient(135deg, #1565C0 0%, #FF9800 100%); color: white; border: none; padding: 10px 25px; border-radius: 12px; cursor: pointer; font-size: 14px; font-weight: 600;">
                         📅 عرض/إخفاء تفاصيل استهلاك اليوم السابق
                     </button>
                 </div>
@@ -520,7 +525,7 @@
                 <div id="consumptionTable"></div>
                 
                 <div style="margin-top: 30px;">
-                    <h3 style="color: #333; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #667eea;">
+                    <h3 style="color: #333; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #1565C0;">
                         📊 الإحصائية الشهرية لكل صنف
                     </h3>
                     <div class="hint-box">
@@ -558,7 +563,7 @@
                 <div id="monthlyStatsMonths" style="display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 25px;"></div>
 
                 <div id="monthlyStatsDetail" style="display:none;">
-                    <h3 style="color: #333; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid #667eea;">
+                    <h3 style="color: #333; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid #1565C0;">
                         📅 استهلاك شهر <span id="msSelectedMonth"></span>
                     </h3>
                     <div class="stats-grid" style="grid-template-columns: repeat(3, 1fr); margin-bottom: 20px;">
@@ -629,7 +634,7 @@
                 <div id="dailyStatementDays" style="display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 25px;"></div>
 
                 <div id="dailyStatementDetail" style="display:none;">
-                    <h3 style="color: #333; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid #667eea;">
+                    <h3 style="color: #333; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid #1565C0;">
                         📅 استهلاك يوم <span id="dsSelectedDay"></span>
                     </h3>
                     <div class="stats-grid" style="grid-template-columns: repeat(3, 1fr); margin-bottom: 20px;">
@@ -1101,7 +1106,7 @@
                 yesterdayHtml += `<tr>
                     <td>${item.name}</td>
                     <td>${item.unit}</td>
-                    <td style="font-weight:600; color:#667eea;">${yesterday} ${item.unit}</td>
+                    <td style="font-weight:600; color:#1565C0;">${yesterday} ${item.unit}</td>
                     <td>${yestCost.toFixed(2)} ج.م</td>
                     <td><button class="btn-delete" onclick="deleteYesterdayRecord(${item.id})">🗑️</button></td>
                 </tr>`;
@@ -1196,7 +1201,7 @@
             html += `<tr>
                 <td style="font-weight:600;">${item.name}</td>
                 <td>${daily.toFixed(2)} ${item.unit}</td>
-                <td style="font-weight:600; color:#667eea;">${monthly.toFixed(2)} ${item.unit}</td>
+                <td style="font-weight:600; color:#1565C0;">${monthly.toFixed(2)} ${item.unit}</td>
                 <td>${item.qty} ${item.unit}</td>
                 <td style="font-weight:600; color:${remaining < 0 ? '#c62828' : '#333'};">${remaining.toFixed(2)} ${item.unit}</td>
                 <td>${monthlyCost.toFixed(2)} ج.م</td>
@@ -1266,7 +1271,7 @@
                 html += `<tr>
                     <td style="font-weight:600;">${o.item.name}</td>
                     <td>${o.daily.toFixed(2)} ${o.item.unit}</td>
-                    <td style="font-weight:600; color:#667eea;">${o.monthlyNeed.toFixed(2)} ${o.item.unit}</td>
+                    <td style="font-weight:600; color:#1565C0;">${o.monthlyNeed.toFixed(2)} ${o.item.unit}</td>
                     <td>${o.item.qty} ${o.item.unit}</td>
                     <td><input type="number" value="${o.orderQty}" min="0" onchange="updateOrderQty(${idx}, this.value)" style="width:80px; padding:6px; border:1px solid #ddd; border-radius:6px; text-align:center;"> ${o.item.unit}</td>
                     <td>${o.item.price} ج.م</td>
@@ -1275,9 +1280,9 @@
                 </tr>`;
             });
 
-            html += `<tr style="background:#f8f9fa; font-weight:700;">
+            html += `<tr style="background:#e3f0ff; font-weight:700;">
                 <td colspan="6" style="text-align:left;">إجمالي الطلبية الحالية:</td>
-                <td style="font-weight:800; color:#667eea;">${totalValue.toFixed(2)} ج.م</td>
+                <td style="font-weight:800; color:#1565C0;">${totalValue.toFixed(2)} ج.م</td>
                 <td></td>
             </tr></tbody></table>`;
         }
@@ -1287,7 +1292,7 @@
         // Saved orders section
         if (orders.length > 0) {
             html += `<div style="margin-top: 30px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #667eea;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #1565C0;">
                     <h3 style="color: #333; margin: 0;">📋 الطلبيات المحفوظة</h3>
                     <button class="btn-delete" onclick="deleteAllOrders()" style="padding: 8px 16px; font-size: 13px;">
                         🗑️ مسح كل الطلبيات
@@ -1296,9 +1301,9 @@
 
             orders.slice().reverse().forEach((order, idx) => {
                 const realIdx = orders.length - 1 - idx;
-                html += `<div style="background: #f8f9fa; border-radius: 12px; padding: 15px; margin-bottom: 15px; border: 1px solid #e0e0e0;">
+                html += `<div style="background: #e3f0ff; border-radius: 12px; padding: 15px; margin-bottom: 15px; border: 1px solid #e0e0e0;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                        <strong style="color:#667eea;">📦 طلبية #${realIdx + 1} — ${order.date}</strong>
+                        <strong style="color:#1565C0;">📦 طلبية #${realIdx + 1} — ${order.date}</strong>
                         <button class="btn-delete" onclick="deleteOrder(${order.id})">🗑️ حذف</button>
                     </div>
                     <table class="data-table" style="margin-top: 0; font-size:13px;">
@@ -1320,7 +1325,7 @@
 
                 html += `<tr style="background: #e8e8e8; font-weight: 700;">
                     <td colspan="3" style="text-align:left;">إجمالي الطلبية</td>
-                    <td style="font-weight:800; color:#667eea;">${order.totalValue.toFixed(2)} ج.م</td>
+                    <td style="font-weight:800; color:#1565C0;">${order.totalValue.toFixed(2)} ج.م</td>
                 </tr></tbody></table></div>`;
             });
 
@@ -1607,7 +1612,7 @@
             html += `
                 <div style="position: relative; display: inline-block;">
                     <button onclick="showDailyDetail(${idx})" style="
-                        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                        background: linear-gradient(135deg, #1565C0 0%, #FF9800 100%);
                         color: white;
                         border: none;
                         padding: 15px 25px;
@@ -1693,12 +1698,12 @@
                     <td>${idx + 1}</td>
                     <td style="font-weight:600;">${item.name || ''}</td>
                     <td>${item.unit || ''}</td>
-                    <td style="font-weight:600; color:#667eea;">${qty} ${item.unit || ''}</td>
+                    <td style="font-weight:600; color:#1565C0;">${qty} ${item.unit || ''}</td>
                     <td>${cost.toFixed(2)} ج.م</td>
                 </tr>`;
             });
 
-            html += `<tr style="background:#f8f9fa; font-weight:700;">
+            html += `<tr style="background:#e3f0ff; font-weight:700;">
                 <td colspan="3">الإجمالي</td>
                 <td>${(record.totalQty || 0).toFixed(2)}</td>
                 <td>${(record.totalCost || 0).toFixed(2)} ج.م</td>
@@ -1861,12 +1866,12 @@
                     <td>${idx + 1}</td>
                     <td style="font-weight:600;">${item.name}</td>
                     <td>${item.unit}</td>
-                    <td style="font-weight:600; color:#667eea;">${item.qty.toFixed(2)} ${item.unit}</td>
+                    <td style="font-weight:600; color:#1565C0;">${item.qty.toFixed(2)} ${item.unit}</td>
                     <td>${item.cost.toFixed(2)} ج.م</td>
                 </tr>`;
             });
 
-            html += `<tr style="background:#f8f9fa; font-weight:700;">
+            html += `<tr style="background:#e3f0ff; font-weight:700;">
                 <td colspan="3">الإجمالي</td>
                 <td>${totalQty.toFixed(2)}</td>
                 <td>${totalCost.toFixed(2)} ج.م</td>
