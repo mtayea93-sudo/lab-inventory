@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>معدل استهلاك واحتياج المعمل</title>
-    <link rel="icon" type="image/png" href="logo.png">
+    <link rel="icon" type="image/png" href="logo.jpeg">
 
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
@@ -197,6 +197,54 @@
             font-size: 14px;
         }
 
+        /* Category Filter Buttons */
+        .category-filters {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .cat-filter-btn {
+            border: 2px solid #e0e0e0;
+            background: white;
+            color: #555;
+            padding: 10px 24px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 700;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .cat-filter-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .cat-filter-btn.active {
+            background: linear-gradient(135deg, #1565C0 0%, #FF9800 100%);
+            color: white;
+            border-color: transparent;
+            box-shadow: 0 4px 15px rgba(102,126,234,0.3);
+        }
+        .cat-filter-btn.flash-active {
+            background: linear-gradient(135deg, #00838f 0%, #006064 100%);
+            color: white;
+            border-color: transparent;
+        }
+        .cat-filter-btn.chem-active {
+            background: linear-gradient(135deg, #2e7d32 0%, #1b5e20 100%);
+            color: white;
+            border-color: transparent;
+        }
+        .cat-filter-btn.card-active {
+            background: linear-gradient(135deg, #7b1fa2 0%, #4a148c 100%);
+            color: white;
+            border-color: transparent;
+        }
+
         /* Forms */
         .input-row {
             display: flex;
@@ -368,6 +416,8 @@
             .input-group { min-width: 100%; }
             .data-table { font-size: 12px; }
             .data-table th, .data-table td { padding: 8px 6px; }
+            .category-filters { justify-content: center; }
+            .cat-filter-btn { padding: 8px 16px; font-size: 13px; }
         }
     </style>
 <base target="_blank">
@@ -434,7 +484,7 @@
 <div class="dashboard" id="adminDashboard" style="display:none;">
     <div class="top-bar">
         <div style="display:flex; align-items:center; gap:12px;">
-            <img src="logo.png" alt="DR SAIKR LAB" style="height:40px; border-radius:8px;">
+            <img src="logo.jpeg" alt="DR SAIKR LAB" style="height:40px; border-radius:8px;">
         </div>
         <div class="nav-tabs">
             <button class="nav-tab active" onclick="showAdminTab('overview', this)">📊 نظرة عامة</button>
@@ -505,6 +555,14 @@
                         <label>🔍 البحث في المخزون</label>
                         <input type="text" id="adminInvSearch" placeholder="اكتب اسم المستلزم..." oninput="renderAdminInventory()" style="width: 100%;">
                     </div>
+                </div>
+
+                <!-- Category Filters for Admin Inventory -->
+                <div class="category-filters" id="adminInvFilters">
+                    <button class="cat-filter-btn active" onclick="setAdminInvFilter('all', this)">📋 الكل</button>
+                    <button class="cat-filter-btn" onclick="setAdminInvFilter('فلاش', this)">🔵 فلاش</button>
+                    <button class="cat-filter-btn" onclick="setAdminInvFilter('كروت', this)">🟣 كروت</button>
+                    <button class="cat-filter-btn" onclick="setAdminInvFilter('كيميا', this)">🟢 كيميا</button>
                 </div>
 
                 <div id="adminInventoryTable"></div>
@@ -737,7 +795,7 @@
 <div class="dashboard" id="dashboard">
     <div class="top-bar">
         <div style="display:flex; align-items:center; gap:12px;">
-            <img src="logo.png" alt="DR SAIKR LAB" style="height:40px; border-radius:8px;">
+            <img src="logo.jpeg" alt="DR SAIKR LAB" style="height:40px; border-radius:8px;">
         </div>
         <button class="btn-logout" onclick="logout()">🚪 تسجيل الخروج</button>
         <div class="nav-tabs">
@@ -748,7 +806,7 @@
             <button class="nav-tab" onclick="showTab('orders', this)">🛒 الطلبيات</button>
             <button class="nav-tab" onclick="showTab('debts', this)">💰 المديونية</button>
         </div>
-        
+
     </div>
 
     <div class="main-content">
@@ -766,6 +824,14 @@
                         <label>🔍 البحث في المخزون</label>
                         <input type="text" id="invSearch" placeholder="اكتب اسم المستلزم..." oninput="renderInventory()" style="width: 100%;">
                     </div>
+                </div>
+
+                <!-- Category Filters for Inventory -->
+                <div class="category-filters" id="invFilters">
+                    <button class="cat-filter-btn active" onclick="setInvFilter('all', this)">📋 الكل</button>
+                    <button class="cat-filter-btn" onclick="setInvFilter('فلاش', this)">🔵 فلاش</button>
+                    <button class="cat-filter-btn" onclick="setInvFilter('كروت', this)">🟣 كروت</button>
+                    <button class="cat-filter-btn" onclick="setInvFilter('كيميا', this)">🟢 كيميا</button>
                 </div>
 
                 <div class="input-row">
@@ -852,6 +918,14 @@
                     </div>
                 </div>
 
+                <!-- Category Filters for Consumption -->
+                <div class="category-filters" id="consFilters">
+                    <button class="cat-filter-btn active" onclick="setConsFilter('all', this)">📋 الكل</button>
+                    <button class="cat-filter-btn" onclick="setConsFilter('فلاش', this)">🔵 فلاش</button>
+                    <button class="cat-filter-btn" onclick="setConsFilter('كروت', this)">🟣 كروت</button>
+                    <button class="cat-filter-btn" onclick="setConsFilter('كيميا', this)">🟢 كيميا</button>
+                </div>
+
                 <!-- Yesterday Details Toggle -->
                 <div style="margin: 15px 0; text-align: center;">
                     <button onclick="toggleYesterdayDetails()" style="background: linear-gradient(135deg, #1565C0 0%, #FF9800 100%); color: white; border: none; padding: 10px 25px; border-radius: 12px; cursor: pointer; font-size: 14px; font-weight: 600;">
@@ -875,7 +949,7 @@
                 </div>
 
                 <div id="consumptionTable"></div>
-                
+
                 <div style="margin-top: 30px;">
                     <h3 style="color: #333; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #1565C0;">
                         📊 الإحصائية الشهرية لكل صنف
@@ -954,6 +1028,14 @@
                         <div class="number" id="statOrderTotal">0</div>
                         <div class="label">إجمالي قيمة الطلبية</div>
                     </div>
+                </div>
+
+                <!-- Category Filters for Orders -->
+                <div class="category-filters" id="orderFilters">
+                    <button class="cat-filter-btn active" onclick="setOrderFilter('all', this)">📋 الكل</button>
+                    <button class="cat-filter-btn" onclick="setOrderFilter('فلاش', this)">🔵 فلاش</button>
+                    <button class="cat-filter-btn" onclick="setOrderFilter('كروت', this)">🟣 كروت</button>
+                    <button class="cat-filter-btn" onclick="setOrderFilter('كيميا', this)">🟢 كيميا</button>
                 </div>
 
                 <div id="ordersTable"></div>
@@ -1097,6 +1179,12 @@
     let ADMIN_PASSWORD = localStorage.getItem('admin_pass') || "Admin@2024";
     let users = JSON.parse(localStorage.getItem('lab_users') || '[]');
 
+    // ========== CATEGORY FILTERS ==========
+    let invFilter = 'all';
+    let consFilter = 'all';
+    let orderFilter = 'all';
+    let adminInvFilter = 'all';
+
     // ========== DATA ==========
     let inventory = [];
     let consumption = [];
@@ -1115,7 +1203,6 @@
         } catch (e) {
             console.error("Firebase save error:", e);
             updateSyncStatus(false, "⚠️ غير متصل - محفوظ محلياً");
-            // Fallback to localStorage
             localStorage.setItem('lab_inv_backup', JSON.stringify({inventory, consumption, debts, orders}));
         }
     }
@@ -1131,13 +1218,11 @@
                 debts = data.debts || [];
                 orders = data.orders || [];
                 updateSyncStatus(true, "☁️ متصل بالسحابة");
-            // Render admin views if admin dashboard is visible
-            if (document.getElementById('adminDashboard').style.display === 'block') {
-                renderAdminOverview();
-                renderAdminInventory();
-            }
+                if (document.getElementById('adminDashboard').style.display === 'block') {
+                    renderAdminOverview();
+                    renderAdminInventory();
+                }
             } else {
-                // Try localStorage backup
                 const backup = localStorage.getItem('lab_inv_backup');
                 if (backup) {
                     const data = JSON.parse(backup);
@@ -1161,7 +1246,6 @@
             updateSyncStatus(false, "⚠️ غير متصل - وضع عدم الاتصال");
         }
         renderAll();
-        // Also render admin views if admin dashboard is visible
         if (document.getElementById('adminDashboard').style.display === 'block') {
             renderAdminOverview();
             renderAdminInventory();
@@ -1178,7 +1262,6 @@
             debts = data.debts || [];
             orders = data.orders || [];
             renderAll();
-            // Also render admin views if admin dashboard is visible
             if (document.getElementById('adminDashboard').style.display === 'block') {
                 renderAdminOverview();
                 renderAdminInventory();
@@ -1196,6 +1279,48 @@
         icon.textContent = online ? '☁️' : '⚠️';
         txt.textContent = text;
     }
+
+    // ========== CATEGORY FILTER FUNCTIONS ==========
+    function setFilterState(filterType, category, btn) {
+        const container = btn.parentElement;
+        container.querySelectorAll('.cat-filter-btn').forEach(b => {
+            b.classList.remove('active', 'flash-active', 'chem-active', 'card-active');
+        });
+        if (category === 'all') {
+            btn.classList.add('active');
+        } else if (category === 'فلاش') {
+            btn.classList.add('flash-active');
+        } else if (category === 'كيميا') {
+            btn.classList.add('chem-active');
+        } else if (category === 'كروت') {
+            btn.classList.add('card-active');
+        }
+    }
+
+    window.setInvFilter = function(category, btn) {
+        invFilter = category;
+        setFilterState('inv', category, btn);
+        renderInventory();
+    };
+
+    window.setConsFilter = function(category, btn) {
+        consFilter = category;
+        setFilterState('cons', category, btn);
+        renderConsumption();
+        renderConsumptionMonthlyStats();
+    };
+
+    window.setOrderFilter = function(category, btn) {
+        orderFilter = category;
+        setFilterState('order', category, btn);
+        renderOrders();
+    };
+
+    window.setAdminInvFilter = function(category, btn) {
+        adminInvFilter = category;
+        setFilterState('adminInv', category, btn);
+        renderAdminInventory();
+    };
 
     // ========== ADMIN LOGIN / LOGOUT ==========
     window.showAdminLogin = function() {
@@ -1217,7 +1342,7 @@
             document.getElementById('adminLoginScreen').style.display = 'none';
             document.getElementById('adminDashboard').style.display = 'block';
             document.getElementById('adminErrorMsg').classList.remove('show');
-            await loadFromFirebase(); // Load data first and WAIT
+            await loadFromFirebase();
             renderAdminOverview();
             renderAdminInventory();
             renderAccountDays();
@@ -1241,7 +1366,6 @@
     window.showAdminTab = function(tab, btn) {
         document.querySelectorAll('#adminDashboard .tab-content').forEach(t => t.classList.remove('active'));
         document.querySelectorAll('#adminDashboard .nav-tab').forEach(b => b.classList.remove('active'));
-        // Fix tab ID: overview -> adminOverviewTab, adminInventory -> adminInventoryTab, accounts -> adminAccountsTab
         const tabId = tab === 'overview' ? 'adminOverviewTab' : 
                       tab === 'adminInventory' ? 'adminInventoryTab' :
                       tab === 'accounts' ? 'adminAccountsTab' :
@@ -1252,8 +1376,6 @@
         btn.classList.add('active');
         if (tab === 'overview') renderAdminOverview();
         if (tab === 'adminInventory') { 
-            console.log('Switching to adminInventory tab');
-            // If inventory is empty, wait for data then render
             if (inventory.length === 0) {
                 loadFromFirebase().then(() => {
                     setTimeout(() => renderAdminInventory(), 300);
@@ -1269,14 +1391,11 @@
 
     // ========== ADMIN OVERVIEW ==========
     function renderAdminOverview() {
-        // Total items
         document.getElementById('adminTotalItems').textContent = inventory.length;
 
-        // Total value
         const totalValue = inventory.reduce((sum, i) => sum + (i.price * i.qty), 0);
         document.getElementById('adminTotalValue').textContent = totalValue.toFixed(0) + ' ج.م';
 
-        // Category counts
         const flashCount = inventory.filter(i => i.category === 'فلاش').length;
         const chemCount = inventory.filter(i => i.category === 'كيميا').length;
         const cardCount = inventory.filter(i => i.category === 'كروت').length;
@@ -1284,7 +1403,6 @@
         document.getElementById('adminChemCount').textContent = chemCount;
         document.getElementById('adminCardCount').textContent = cardCount;
 
-        // Low stock items
         let lowStock = 0;
         inventory.forEach(item => {
             const c = consumption.find(con => con.itemId === item.id);
@@ -1294,7 +1412,6 @@
         });
         document.getElementById('adminLowStock').textContent = lowStock;
 
-        // Latest items (last 5)
         const latest = [...inventory].slice(-5).reverse();
         let latestHtml = `<table class="data-table"><thead><tr><th>#</th><th>الاسم</th><th>النوع</th><th>الكمية</th><th>القيمة</th></tr></thead><tbody>`;
         latest.forEach((item, i) => {
@@ -1311,7 +1428,6 @@
         latestHtml += '</tbody></table>';
         document.getElementById('adminLatestItems').innerHTML = latestHtml || '<div style="text-align:center; color:#999; padding:20px;">لا توجد أصناف</div>';
 
-        // Low stock table
         const lowStockItems = [];
         inventory.forEach(item => {
             const c = consumption.find(con => con.itemId === item.id);
@@ -1347,22 +1463,24 @@
 
     // ========== ADMIN INVENTORY ==========
     window.renderAdminInventory = function() {
-        console.log('[Admin Inventory] Rendering, inventory count:', inventory.length);
         const container = document.getElementById('adminInventoryTable');
-        if (!container) { console.error('[Admin Inventory] Container not found!'); return; }
+        if (!container) return;
 
         const searchTerm = document.getElementById('adminInvSearch') ? document.getElementById('adminInvSearch').value.trim().toLowerCase() : '';
 
         let filtered = inventory;
         if (searchTerm) {
-            filtered = inventory.filter(i => i.name.toLowerCase().includes(searchTerm));
+            filtered = filtered.filter(i => i.name.toLowerCase().includes(searchTerm));
+        }
+        if (adminInvFilter !== 'all') {
+            filtered = filtered.filter(i => i.category === adminInvFilter);
         }
 
         if (filtered.length === 0) {
             container.innerHTML = `
                 <div class="empty-state">
                     <div class="icon">📭</div>
-                    <div>${searchTerm ? 'لا توجد نتائج مطابقة للبحث' : (inventory.length === 0 ? 'جاري تحميل البيانات... <br><span style="font-size:13px; color:#999;">إذا استمرت المشكلة، راجع الاتصال بالإنترنت</span>' : 'لا يوجد مستلزمات مسجلة')}</div>
+                    <div>${searchTerm || adminInvFilter !== 'all' ? 'لا توجد نتائج مطابقة' : (inventory.length === 0 ? 'جاري تحميل البيانات... <br><span style="font-size:13px; color:#999;">إذا استمرت المشكلة، راجع الاتصال بالإنترنت</span>' : 'لا يوجد مستلزمات مسجلة')}</div>
                 </div>`;
             document.getElementById('adminInvTotalCost').textContent = '0 ج.م';
             document.getElementById('adminInvTotalLab').textContent = '0 ج.م';
@@ -1435,7 +1553,7 @@
     // ========== ADMIN ACCOUNTS ==========
     let adminAccounts = [];
     let currentAccountMonth = new Date();
-    const ACCOUNTS_KEEP_DAYS = 60; // 2 months
+    const ACCOUNTS_KEEP_DAYS = 60;
 
     function loadAdminAccounts() {
         try {
@@ -1450,7 +1568,6 @@
         } catch (e) {}
     }
 
-    // Auto cleanup old daily records (keep 2 months)
     function cleanupOldAccounts() {
         const cutoff = new Date();
         cutoff.setDate(cutoff.getDate() - ACCOUNTS_KEEP_DAYS);
@@ -1503,8 +1620,6 @@
             `;
         }
         container.innerHTML = html;
-
-        // Render monthly summary
         renderAccountMonthlySummary(year, month);
     };
 
@@ -1524,8 +1639,6 @@
 
         const record = adminAccounts.find(a => a.date === dateStr);
 
-        // Auto-fill previous: if this day has a record, use its saved previous
-        // Otherwise, find the last day BEFORE this date and use its net
         let prevValue = '';
         if (record) {
             prevValue = record.previous;
@@ -1569,7 +1682,6 @@
         const expenses = parseFloat(document.getElementById('accInputExpenses').value) || 0;
         const net = prev + morning + evening - expenses;
 
-        // Remove existing record for same date
         adminAccounts = adminAccounts.filter(a => a.date !== currentAccountDate);
 
         adminAccounts.push({
@@ -1594,7 +1706,7 @@
         const monthRecords = adminAccounts.filter(a => {
             const d = new Date(a.date);
             return d.getFullYear() === year && d.getMonth() === month;
-        }).sort((a, b) => new Date(a.date) - new Date(b.date)); // sort ascending by date
+        }).sort((a, b) => new Date(a.date) - new Date(b.date));
 
         const container = document.getElementById('accountMonthlySummary');
         if (monthRecords.length === 0) {
@@ -1602,7 +1714,6 @@
             return;
         }
 
-        // Get carried balance from previous month (net of last day of previous month)
         const prevMonthLastDay = adminAccounts
             .filter(a => {
                 const d = new Date(a.date);
@@ -1621,10 +1732,7 @@
             totalExpenses += r.expenses;
         });
 
-        // Monthly net = carried balance + total morning + total evening - total expenses
         const totalNet = carriedBalance + totalMorning + totalEvening - totalExpenses;
-
-        // For display: totalPrev shows the carried balance from previous month
         const totalPrev = carriedBalance;
 
         container.innerHTML = `
@@ -1645,10 +1753,9 @@
     window.showAnnualAccounts = function() {
         const container = document.getElementById('annualAccountsContent');
 
-        // Group by year-month
         const monthGroups = {};
         adminAccounts.forEach(a => {
-            const key = a.date.slice(0, 7); // "2026-07"
+            const key = a.date.slice(0, 7);
             if (!monthGroups[key]) {
                 monthGroups[key] = { records: [], totalPrev: 0, totalMorning: 0, totalEvening: 0, totalExpenses: 0, totalNet: 0 };
             }
@@ -1657,15 +1764,12 @@
             monthGroups[key].totalEvening += a.evening;
             monthGroups[key].totalExpenses += a.expenses;
         });
-        // After grouping, calculate:
-        // totalPrev = net of LAST day of PREVIOUS month (carried balance)
-        // totalNet = totalPrev + totalMorning + totalEvening - totalExpenses
+
         const sortedKeys = Object.keys(monthGroups).sort();
         sortedKeys.forEach((key, idx) => {
             const g = monthGroups[key];
             const sorted = g.records.sort((a, b) => new Date(a.date) - new Date(b.date));
 
-            // Get carried balance from previous month
             let carriedBalance = 0;
             if (idx > 0) {
                 const prevKey = sortedKeys[idx - 1];
@@ -1773,18 +1877,14 @@
 
     // ========== REPORTS ==========
     function renderReports() {
-        // Total consumption
         const totalCons = consumption.reduce((sum, c) => sum + (c.daily || 0), 0);
         document.getElementById('reportTotalConsumption').textContent = totalCons.toFixed(2);
 
-        // Total orders
         document.getElementById('reportTotalOrders').textContent = orders.length;
 
-        // Total debt
         const totalDebt = debts.length > 0 ? debts[debts.length - 1].remaining : 0;
         document.getElementById('reportTotalDebt').textContent = totalDebt.toFixed(2) + ' ج.م';
 
-        // Category distribution
         const flashCount = inventory.filter(i => i.category === 'فلاش').length;
         const chemCount = inventory.filter(i => i.category === 'كيميا').length;
         const cardCount = inventory.filter(i => i.category === 'كروت').length;
@@ -1812,7 +1912,6 @@
         `;
         document.getElementById('categoryDistribution').innerHTML = distHtml;
 
-        // Top consumed items
         const topItems = [...consumption]
             .filter(c => c.daily > 0)
             .sort((a, b) => b.daily - a.daily)
@@ -1971,14 +2070,12 @@
 
     function renderAll() {
         renderInventory();
-        renderConsumptionSelect();
         renderConsumption();
         renderConsumptionMonthlyStats();
         renderOrders();
         renderDebts();
         renderDailyStatement();
         renderMonthlyStats();
-        // Also render admin views if visible
         if (document.getElementById('adminDashboard').style.display === 'block') {
             renderAdminOverview();
             renderAdminInventory();
@@ -2014,15 +2111,18 @@
 
         let filtered = inventory;
         if (searchTerm) {
-            filtered = inventory.filter(i => i.name.toLowerCase().includes(searchTerm));
+            filtered = filtered.filter(i => i.name.toLowerCase().includes(searchTerm));
+        }
+        if (invFilter !== 'all') {
+            filtered = filtered.filter(i => i.category === invFilter);
         }
 
         if (filtered.length === 0) {
             container.innerHTML = `
                 <div class="empty-state">
                     <div class="icon">📭</div>
-                    <div>${searchTerm ? 'لا توجد نتائج مطابقة للبحث' : 'لا يوجد مستلزمات مسجلة'}</div>
-                    <div style="font-size:13px; margin-top:5px;">${searchTerm ? 'جرب كلمة بحث أخرى' : 'أضف المستلزمات أولاً من الأعلى'}</div>
+                    <div>${searchTerm || invFilter !== 'all' ? 'لا توجد نتائج مطابقة' : 'لا يوجد مستلزمات مسجلة'}</div>
+                    <div style="font-size:13px; margin-top:5px;">${searchTerm || invFilter !== 'all' ? 'جرب تغيير البحث أو الفلتر' : 'أضف المستلزمات أولاً من الأعلى'}</div>
                 </div>`;
             return;
         }
@@ -2084,10 +2184,6 @@
     };
 
     // ========== CONSUMPTION ==========
-    function renderConsumptionSelect() {
-        // No longer needed - all items shown automatically in table
-    }
-
     window.updateConsumption = async function(itemId, newDaily) {
         const daily = parseFloat(newDaily) || 0;
         const existing = consumption.find(c => c.itemId === itemId);
@@ -2135,13 +2231,9 @@
             return;
         }
 
-        // Save to localStorage daily records (temporary, auto-deletes after 15 days)
-        loadDailyRecords(); // Ensure fresh data
-
-        // Remove existing record for same date if any
+        loadDailyRecords();
         dailyRecords = dailyRecords.filter(r => r.date !== today);
 
-        // Add new record
         dailyRecords.push({
             date: today,
             items: historyItems,
@@ -2151,9 +2243,7 @@
         });
 
         saveDailyRecords();
-        console.log("[Save] Saved to daily records:", today, historyItems);
 
-        // Also try to save to Firebase (optional backup)
         try {
             await db.collection("lab_history").doc(today).set({
                 items: historyItems,
@@ -2164,7 +2254,6 @@
             console.error("[Save] Firebase backup failed:", e);
         }
 
-        // Reset daily consumption
         consumption.forEach(c => {
             c.yesterday = c.daily;
             c.daily = 0;
@@ -2176,7 +2265,6 @@
 
     function renderConsumption() {
         const container = document.getElementById('consumptionTable');
-        const searchTerm = document.getElementById('consSearch') ? document.getElementById('consSearch').value.trim().toLowerCase() : '';
 
         let totalItems = 0, totalDaily = 0, totalCost = 0;
         let yesterdayHtml = `<table class="data-table">
@@ -2189,17 +2277,17 @@
             </tr></thead><tbody>`;
         let hasYesterday = false;
 
-        let filteredInv = inventory;
-        if (searchTerm) {
-            filteredInv = inventory.filter(i => i.name.toLowerCase().includes(searchTerm));
+        let filtered = inventory;
+        if (consFilter !== 'all') {
+            filtered = filtered.filter(i => i.category === consFilter);
         }
 
-        if (filteredInv.length === 0) {
+        if (filtered.length === 0) {
             container.innerHTML = `
                 <div class="empty-state">
                     <div class="icon">📭</div>
-                    <div>${searchTerm ? 'لا توجد نتائج مطابقة للبحث' : 'لا يوجد بيانات'}</div>
-                    <div style="font-size:13px; margin-top:5px;">${searchTerm ? 'جرب كلمة بحث أخرى' : 'أضف المستلزمات في شاشة المخزون أولاً'}</div>
+                    <div>${consFilter !== 'all' ? 'لا توجد أصناف مطابقة للتصنيف' : 'لا يوجد بيانات'}</div>
+                    <div style="font-size:13px; margin-top:5px;">${consFilter !== 'all' ? 'جرب تصنيف آخر' : 'أضف المستلزمات في شاشة المخزون أولاً'}</div>
                 </div>`;
             document.getElementById('yesterdayTable').innerHTML = '<div style="text-align:center; color:#999; padding:20px;">لا يوجد سجل لليوم السابق</div>';
             updateConsumptionStats(0, 0, 0, 0);
@@ -2218,7 +2306,7 @@
                 <th>إجراءات</th>
             </tr></thead><tbody>`;
 
-        filteredInv.forEach(item => {
+        filtered.forEach(item => {
             const c = consumption.find(con => con.itemId === item.id);
             const yesterday = c ? (c.yesterday || 0) : 0;
             const daily = c ? c.daily : 0;
@@ -2242,7 +2330,6 @@
                 <td><button class="btn-delete" onclick="deleteCons(${item.id})">🗑️</button></td>
             </tr>`;
 
-            // Build yesterday details
             if (yesterday > 0) {
                 hasYesterday = true;
                 const yestCost = yesterday * item.price;
@@ -2259,7 +2346,6 @@
         html += '</tbody></table>';
         container.innerHTML = html;
 
-        // Show yesterday details
         if (hasYesterday) {
             yesterdayHtml += '</tbody></table>';
             document.getElementById('yesterdayTable').innerHTML = yesterdayHtml;
@@ -2303,12 +2389,18 @@
 
     function renderConsumptionMonthlyStats() {
         const container = document.getElementById('consumptionMonthlyStats');
-        if (inventory.length === 0) {
+
+        let filtered = inventory;
+        if (consFilter !== 'all') {
+            filtered = filtered.filter(i => i.category === consFilter);
+        }
+
+        if (filtered.length === 0) {
             container.innerHTML = `
                 <div class="empty-state">
                     <div class="icon">📭</div>
-                    <div>لا يوجد بيانات</div>
-                    <div style="font-size:13px; margin-top:5px;">أضف المستلزمات في شاشة المخزون أولاً</div>
+                    <div>${consFilter !== 'all' ? 'لا توجد أصناف مطابقة' : 'لا يوجد بيانات'}</div>
+                    <div style="font-size:13px; margin-top:5px;">${consFilter !== 'all' ? 'جرب تصنيف آخر' : 'أضف المستلزمات في شاشة المخزون أولاً'}</div>
                 </div>`;
             return;
         }
@@ -2325,7 +2417,7 @@
                 <th>الحالة</th>
             </tr></thead><tbody>`;
 
-        filteredInv.forEach(item => {
+        filtered.forEach(item => {
             const c = consumption.find(con => con.itemId === item.id);
             const daily = c ? (c.daily || 0) : 0;
             const monthly = daily * 30;
@@ -2344,6 +2436,7 @@
 
             html += `<tr>
                 <td style="font-weight:600;">${item.name}</td>
+                <td><span class="badge" style="background:${item.category === 'فلاش' ? '#e0f7fa' : item.category === 'كيميا' ? '#e8f5e9' : item.category === 'كروت' ? '#f3e5f5' : '#f5f5f5'}; color:${item.category === 'فلاش' ? '#00838f' : item.category === 'كيميا' ? '#2e7d32' : item.category === 'كروت' ? '#7b1fa2' : '#999'}; font-weight:700;">${item.category === 'فلاش' ? '🔵 فلاش' : item.category === 'كيميا' ? '🟢 كيميا' : item.category === 'كروت' ? '🟣 كروت' : 'غير محدد'}</span></td>
                 <td>${daily.toFixed(2)} ${item.unit}</td>
                 <td style="font-weight:600; color:#1565C0;">${monthly.toFixed(2)} ${item.unit}</td>
                 <td>${item.qty} ${item.unit}</td>
@@ -2363,11 +2456,15 @@
     function renderOrders() {
         const container = document.getElementById('ordersTable');
 
-        // Calculate current order using max(daily, yesterday) so it stays after save
+        let filtered = inventory;
+        if (orderFilter !== 'all') {
+            filtered = filtered.filter(i => i.category === orderFilter);
+        }
+
         orderItems = [];
         let totalValue = 0;
 
-        filteredInv.forEach(item => {
+        filtered.forEach(item => {
             const c = consumption.find(con => con.itemId === item.id);
             const daily = c ? Math.max(c.daily || 0, c.yesterday || 0) : 0;
             const monthlyNeed = daily * 30;
@@ -2381,7 +2478,6 @@
 
         let html = '';
 
-        // Action buttons
         html += `<div style="margin-bottom:15px; text-align:center; display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
             <button class="btn-add" onclick="saveOrder()" style="background:linear-gradient(135deg, #4caf50 0%, #2e7d32 100%);">
                 💾 حفظ الطلبية الحالية
@@ -2395,8 +2491,8 @@
             html += `
                 <div class="empty-state">
                     <div class="icon">✅</div>
-                    <div>المخزون كافٍ لجميع الاحتياجات الشهرية</div>
-                    <div style="font-size:13px; margin-top:5px;">لا تحتاج لطلبيات حالياً</div>
+                    <div>${orderFilter !== 'all' ? 'لا توجد طلبيات مطلوبة في هذا التصنيف' : 'المخزون كافٍ لجميع الاحتياجات الشهرية'}</div>
+                    <div style="font-size:13px; margin-top:5px;">${orderFilter !== 'all' ? 'جرب تصنيف آخر' : 'لا تحتاج لطلبيات حالياً'}</div>
                 </div>`;
         } else {
             html += `<table class="data-table">
@@ -2415,6 +2511,7 @@
             orderItems.forEach((o, idx) => {
                 html += `<tr>
                     <td style="font-weight:600;">${o.item.name}</td>
+                    <td><span class="badge" style="background:${o.item.category === 'فلاش' ? '#e0f7fa' : o.item.category === 'كيميا' ? '#e8f5e9' : o.item.category === 'كروت' ? '#f3e5f5' : '#f5f5f5'}; color:${o.item.category === 'فلاش' ? '#00838f' : o.item.category === 'كيميا' ? '#2e7d32' : o.item.category === 'كروت' ? '#7b1fa2' : '#999'}; font-weight:700;">${o.item.category === 'فلاش' ? '🔵 فلاش' : o.item.category === 'كيميا' ? '🟢 كيميا' : o.item.category === 'كروت' ? '🟣 كروت' : 'غير محدد'}</span></td>
                     <td>${o.daily.toFixed(2)} ${o.item.unit}</td>
                     <td style="font-weight:600; color:#1565C0;">${o.monthlyNeed.toFixed(2)} ${o.item.unit}</td>
                     <td>${o.item.qty} ${o.item.unit}</td>
@@ -2434,7 +2531,6 @@
 
         updateOrderStats(orderItems.length, totalValue);
 
-        // Saved orders section
         if (orders.length > 0) {
             html += `<div style="margin-top: 30px;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #1565C0;">
@@ -2491,7 +2587,6 @@
         const qty = parseInt(newQty) || 0;
         const newValue = qty * item.item.price;
         document.getElementById('orderVal_' + idx).textContent = newValue.toFixed(2) + ' ج.م';
-        // Recalculate total
         let total = 0;
         orderItems.forEach((o, i) => {
             if (i === idx) {
@@ -2668,16 +2763,14 @@
     };
 
     // ========== DAILY STATEMENT FUNCTIONS ==========
-    let dailyRecords = []; // Array of {date, items[], totalQty, totalCost, totalItems}
+    let dailyRecords = [];
     const DAYS_TO_KEEP = 15;
 
-    // Load daily records from localStorage (temporary storage, auto-deletes after 15 days)
     function loadDailyRecords() {
         try {
             const stored = localStorage.getItem('lab_daily_records');
             if (stored) {
                 dailyRecords = JSON.parse(stored);
-                // Auto-delete records older than 15 days
                 const cutoff = new Date();
                 cutoff.setDate(cutoff.getDate() - DAYS_TO_KEEP);
                 const beforeCount = dailyRecords.length;
@@ -2712,10 +2805,8 @@
         const container = document.getElementById('dailyStatementDays');
         const detailSection = document.getElementById('dailyStatementDetail');
 
-        // Hide detail when re-rendering
         detailSection.style.display = 'none';
 
-        // Update summary stats
         const totalDays = dailyRecords.length;
         let totalItemsAll = 0;
         let totalCostAll = 0;
@@ -2738,7 +2829,6 @@
             return;
         }
 
-        // Sort by date descending (newest first)
         const sorted = [...dailyRecords].sort((a, b) => new Date(b.date) - new Date(a.date));
 
         let html = '';
@@ -2748,7 +2838,6 @@
             const daysAr = ['الأحد','الإثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
             const dayLabel = `${daysAr[d.getDay()]} ${d.getDate()} ${monthsAr[d.getMonth()]}`;
 
-            // Calculate days remaining before auto-delete
             const recordDate = new Date(record.date);
             const today = new Date();
             const daysDiff = Math.floor((today - recordDate) / (1000 * 60 * 60 * 24));
@@ -2773,7 +2862,8 @@
                         min-width: 140px;
                         box-shadow: 0 4px 15px rgba(102,126,234,0.3);
                     " onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 8px 25px rgba(102,126,234,0.4)';" 
-                       onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(102,126,234,0.3)';">
+                       onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(102,126,234,0.3)';"
+                    >
                         <span style="font-size: 20px;">📅</span>
                         <span>${dayLabel}</span>
                         <span style="font-size: 11px; opacity: 0.8;">${record.totalItems || 0} صنف · ${(record.totalCost || 0).toFixed(0)} ج.م</span>
@@ -2805,7 +2895,6 @@
     };
 
     window.showDailyDetail = function(sortedIdx) {
-        // Get the record from sorted array
         const sorted = [...dailyRecords].sort((a, b) => new Date(b.date) - new Date(a.date));
         const record = sorted[sortedIdx];
         if (!record) return;
@@ -2814,18 +2903,15 @@
         const titleDay = document.getElementById('dsSelectedDay');
         const tableDiv = document.getElementById('dsDetailTable');
 
-        // Format date
         const d = new Date(record.date + 'T00:00:00');
         const monthsAr = ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
         const daysAr = ['الأحد','الإثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
         titleDay.textContent = `${daysAr[d.getDay()]} ${d.getDate()} ${monthsAr[d.getMonth()]} ${d.getFullYear()}`;
 
-        // Update detail stats
         document.getElementById('dsDetailItems').textContent = record.totalItems || 0;
         document.getElementById('dsDetailQty').textContent = (record.totalQty || 0).toFixed(2);
         document.getElementById('dsDetailCost').textContent = (record.totalCost || 0).toFixed(2) + ' ج.م';
 
-        // Build table
         let html = `<table class="data-table">
             <thead><tr>
                 <th>#</th>
@@ -2871,10 +2957,9 @@
 
         detailSection.style.display = 'none';
 
-        // Group daily records by month
         const monthGroups = {};
         dailyRecords.forEach(r => {
-            const monthKey = r.date.slice(0, 7); // "2026-06"
+            const monthKey = r.date.slice(0, 7);
             if (!monthGroups[monthKey]) {
                 monthGroups[monthKey] = { 
                     monthKey, 
@@ -2890,7 +2975,6 @@
             monthGroups[monthKey].totalQty += r.totalQty || 0;
             monthGroups[monthKey].totalCost += r.totalCost || 0;
 
-            // Aggregate items
             if (r.items) {
                 r.items.forEach(item => {
                     const name = item.name || '';
@@ -2910,7 +2994,6 @@
 
         const monthsList = Object.values(monthGroups);
 
-        // Update summary stats
         document.getElementById('msTotalMonths').textContent = monthsList.length;
         let allItems = 0, allCost = 0;
         monthsList.forEach(m => {
@@ -2930,7 +3013,6 @@
             return;
         }
 
-        // Sort by month descending
         monthsList.sort((a, b) => b.monthKey.localeCompare(a.monthKey));
 
         let html = '';
@@ -2958,7 +3040,8 @@
                     min-width: 160px;
                     box-shadow: 0 4px 15px rgba(76,175,80,0.3);
                 " onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 8px 25px rgba(76,175,80,0.4)';" 
-                   onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(76,175,80,0.3)';">
+                   onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(76,175,80,0.3)';"
+                >
                     <span style="font-size: 20px;">📊</span>
                     <span>${monthLabel}</span>
                     <span style="font-size: 11px; opacity: 0.8;">${daysCount} يوم · ${Object.keys(monthData.itemTotals).length} صنف</span>
@@ -2967,7 +3050,6 @@
             `;
         });
 
-        // Store for detail view
         window._monthlyData = monthsList;
 
         container.innerHTML = html;
@@ -2985,7 +3067,6 @@
         const monthsAr = ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
         titleMonth.textContent = `${monthsAr[parseInt(monthNum) - 1]} ${year}`;
 
-        // Update detail stats
         const items = Object.values(monthData.itemTotals);
         let totalQty = 0, totalCost = 0;
         items.forEach(i => { totalQty += i.qty; totalCost += i.cost; });
@@ -2994,7 +3075,6 @@
         document.getElementById('msDetailQty').textContent = totalQty.toFixed(2);
         document.getElementById('msDetailCost').textContent = totalCost.toFixed(2) + ' ج.م';
 
-        // Build table
         let html = `<table class="data-table">
             <thead><tr>
                 <th>#</th>
@@ -3005,7 +3085,7 @@
             </tr></thead><tbody>`;
 
         if (items.length > 0) {
-            items.sort((a, b) => b.qty - a.qty); // Sort by quantity descending
+            items.sort((a, b) => b.qty - a.qty);
             items.forEach((item, idx) => {
                 html += `<tr>
                     <td>${idx + 1}</td>
