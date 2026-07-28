@@ -438,6 +438,8 @@
         </div>
         <div class="nav-tabs">
             <button class="nav-tab active" onclick="showAdminTab('overview', this)">📊 نظرة عامة</button>
+            <button class="nav-tab" onclick="showAdminTab('adminInventory', this)">📦 المخزون</button>
+            <button class="nav-tab" onclick="showAdminTab('accounts', this)">💵 الحسابات</button>
             <button class="nav-tab" onclick="showAdminTab('users', this)">👥 المستخدمين</button>
             <button class="nav-tab" onclick="showAdminTab('reports', this)">📈 التقارير</button>
             <button class="nav-tab" onclick="showAdminTab('settings', this)">⚙️ الإعدادات</button>
@@ -487,6 +489,138 @@
                     ⚠️ أصناف تحتاج طلبية (مخزون أقل من 7 أيام)
                 </h3>
                 <div id="adminLowStockItems"></div>
+            </div>
+        </div>
+
+        <!-- ADMIN INVENTORY TAB -->
+        <div class="tab-content" id="adminInventoryTab">
+            <div class="content-card">
+                <h2>📦 مخزون الإدارة</h2>
+                <div class="hint-box">
+                    💡 يعرض هذا الجدول المخزون مع أسعار معدلة (+8 جنيه على سعر الوحدة) وإضافة سعر اللاب وحساب الربح تلقائياً.
+                </div>
+
+                <div class="input-row" style="margin-bottom: 15px;">
+                    <div class="input-group" style="flex: 1;">
+                        <label>🔍 البحث في المخزون</label>
+                        <input type="text" id="adminInvSearch" placeholder="اكتب اسم المستلزم..." oninput="renderAdminInventory()" style="width: 100%;">
+                    </div>
+                </div>
+
+                <div id="adminInventoryTable"></div>
+
+                <div style="margin-top: 30px; padding-top: 20px; border-top: 2px solid #1565C0;">
+                    <h3 style="color: #333; margin-bottom: 15px;">💰 ملخص الأرباح</h3>
+                    <div class="stats-grid" style="grid-template-columns: repeat(3, 1fr);">
+                        <div class="stat-box" style="background: linear-gradient(135deg, #1565C0 0%, #0d47a1 100%);">
+                            <div class="number" id="adminInvTotalCost">0</div>
+                            <div class="label">إجمالي تكلفة المخزون</div>
+                        </div>
+                        <div class="stat-box" style="background: linear-gradient(135deg, #FF9800 0%, #e65100 100%);">
+                            <div class="number" id="adminInvTotalLab">0</div>
+                            <div class="label">إجمالي قيمة اللاب</div>
+                        </div>
+                        <div class="stat-box" style="background: linear-gradient(135deg, #2e7d32 0%, #1b5e20 100%);">
+                            <div class="number" id="adminInvTotalProfit">0</div>
+                            <div class="label">إجمالي الربح المتوقع</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ACCOUNTS TAB -->
+        <div class="tab-content" id="adminAccountsTab">
+            <div class="content-card">
+                <h2>💵 الحسابات اليومية</h2>
+                <div class="hint-box">
+                    💡 اضغط على أي يوم لإدخال بياناته (الحساب السابق + الصباحي + المسائي - المصاريف = الصافي). يتم حفظ البيانات وتجميعها شهرياً.
+                </div>
+
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <button onclick="changeAccountMonth(-1)" style="background: #1565C0; color: white; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 16px;">◀</button>
+                        <h3 id="accountMonthLabel" style="margin: 0; color: #333; min-width: 150px; text-align: center;"></h3>
+                        <button onclick="changeAccountMonth(1)" style="background: #1565C0; color: white; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 16px;">▶</button>
+                    </div>
+                    <button class="btn-add" onclick="showAnnualAccounts()" style="background: linear-gradient(135deg, #7b1fa2 0%, #4a148c 100%);">
+                        📊 الحسابات السنوية
+                    </button>
+                </div>
+
+                <div id="accountDaysGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px; margin-bottom: 25px;"></div>
+
+                <!-- Day Detail Form -->
+                <div id="accountDayForm" style="display:none; background: #f8fbff; border-radius: 16px; padding: 25px; border: 2px solid #1565C0;">
+                    <h3 style="color: #333; margin-bottom: 20px; text-align: center;">
+                        📅 يوم <span id="accountSelectedDay"></span>
+                    </h3>
+
+                    <div class="stats-grid" style="grid-template-columns: repeat(5, 1fr); margin-bottom: 20px;">
+                        <div class="stat-box" style="background: linear-gradient(135deg, #1565C0 0%, #0d47a1 100%);">
+                            <div class="number" id="accPrevBalance">0</div>
+                            <div class="label">الحساب السابق</div>
+                        </div>
+                        <div class="stat-box" style="background: linear-gradient(135deg, #4caf50 0%, #2e7d32 100%);">
+                            <div class="number" id="accMorning">0</div>
+                            <div class="label">الصباحي</div>
+                        </div>
+                        <div class="stat-box" style="background: linear-gradient(135deg, #FF9800 0%, #e65100 100%);">
+                            <div class="number" id="accEvening">0</div>
+                            <div class="label">المسائي</div>
+                        </div>
+                        <div class="stat-box" style="background: linear-gradient(135deg, #c62828 0%, #b71c1c 100%);">
+                            <div class="number" id="accExpenses">0</div>
+                            <div class="label">المصاريف</div>
+                        </div>
+                        <div class="stat-box" style="background: linear-gradient(135deg, #2e7d32 0%, #1b5e20 100%);">
+                            <div class="number" id="accNet">0</div>
+                            <div class="label">الصافي</div>
+                        </div>
+                    </div>
+
+                    <div class="input-row">
+                        <div class="input-group">
+                            <label>الحساب السابق</label>
+                            <input type="number" id="accInputPrev" placeholder="0" step="0.01" onchange="calculateAccountNet()">
+                        </div>
+                        <div class="input-group">
+                            <label>الصباحي</label>
+                            <input type="number" id="accInputMorning" placeholder="0" step="0.01" onchange="calculateAccountNet()">
+                        </div>
+                        <div class="input-group">
+                            <label>المسائي</label>
+                            <input type="number" id="accInputEvening" placeholder="0" step="0.01" onchange="calculateAccountNet()">
+                        </div>
+                        <div class="input-group">
+                            <label>المصاريف</label>
+                            <input type="number" id="accInputExpenses" placeholder="0" step="0.01" onchange="calculateAccountNet()">
+                        </div>
+                        <div class="input-group">
+                            <label style="color: #2e7d32; font-weight: 800;">الصافي (تلقائي)</label>
+                            <input type="number" id="accInputNet" placeholder="0" step="0.01" readonly style="background: #e8f5e9; font-weight: 700; color: #2e7d32;">
+                        </div>
+                    </div>
+
+                    <div style="text-align: center; margin-top: 15px;">
+                        <button class="btn-add" onclick="saveAccountDay()">💾 حفظ بيانات اليوم</button>
+                        <button onclick="closeAccountDayForm()" style="background: #999; color: white; border: none; padding: 12px 28px; border-radius: 12px; cursor: pointer; font-size: 15px; font-weight: 700; margin-right: 10px;">❌ إغلاق</button>
+                    </div>
+                </div>
+
+                <!-- Monthly Summary -->
+                <div id="accountMonthlySummary" style="margin-top: 30px;"></div>
+            </div>
+        </div>
+
+        <!-- ANNUAL ACCOUNTS MODAL -->
+        <div id="annualAccountsModal" style="display:none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 2000; justify-content: center; align-items: center; padding: 20px;">
+            <div style="background: #f0f7ff; border-radius: 24px; padding: 30px; max-width: 900px; width: 100%; max-height: 90vh; overflow-y: auto; box-shadow: 0 25px 80px rgba(0,0,0,0.3);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h2 style="color: #333; margin: 0;">📊 الحسابات السنوية</h2>
+                    <button onclick="closeAnnualAccounts()" style="background: #ff5252; color: white; border: none; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; font-size: 18px;">×</button>
+                </div>
+                <div id="annualAccountsContent"></div>
             </div>
         </div>
 
@@ -590,6 +724,9 @@
                         📤 استيراد البيانات
                     </button>
                     <input type="file" id="importFile" accept=".json" style="display:none;" onchange="importData(this)">
+                    <button class="btn-add" onclick="clearAllAccounts()" style="background: linear-gradient(135deg, #c62828 0%, #b71c1c 100%);">
+                        🗑️ مسح جميع الحسابات
+                    </button>
                 </div>
             </div>
         </div>
@@ -937,9 +1074,10 @@
 </div>
 
 <!-- Firebase SDK -->
-<script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getFirestore, collection, doc, setDoc, getDoc, onSnapshot, deleteDoc, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script>
+
 
     const firebaseConfig = {
         apiKey: "AIzaSyAclAL-32zx4biBn97QqBiaWS4M7U7Cf3E",
@@ -951,8 +1089,8 @@
         measurementId: "G-4TVTS8QKE2"
     };
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+    const app = firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
 
     // ========== PASSWORDS ==========
     const CORRECT_PASSWORD = "Asmaa@1999";
@@ -969,7 +1107,7 @@
     // ========== FIREBASE SYNC ==========
     async function saveToFirebase() {
         try {
-            await setDoc(doc(db, "lab", "data"), {
+            await db.collection("lab").doc("data").set({
                 inventory, consumption, debts, orders,
                 updatedAt: new Date().toISOString()
             });
@@ -984,15 +1122,20 @@
 
     async function loadFromFirebase() {
         try {
-            const docRef = doc(db, "lab", "data");
-            const docSnap = await getDoc(docRef);
-            if (docSnap.exists()) {
+            const docRef = db.collection("lab").doc("data");
+            const docSnap = await docRef.get();
+            if (docSnap.exists) {
                 const data = docSnap.data();
                 inventory = data.inventory || [];
                 consumption = data.consumption || [];
                 debts = data.debts || [];
                 orders = data.orders || [];
                 updateSyncStatus(true, "☁️ متصل بالسحابة");
+            // Render admin views if admin dashboard is visible
+            if (document.getElementById('adminDashboard').style.display === 'block') {
+                renderAdminOverview();
+                renderAdminInventory();
+            }
             } else {
                 // Try localStorage backup
                 const backup = localStorage.getItem('lab_inv_backup');
@@ -1018,17 +1161,28 @@
             updateSyncStatus(false, "⚠️ غير متصل - وضع عدم الاتصال");
         }
         renderAll();
+        // Also render admin views if admin dashboard is visible
+        if (document.getElementById('adminDashboard').style.display === 'block') {
+            renderAdminOverview();
+            renderAdminInventory();
+            renderAccountDays();
+        }
     }
 
     // Real-time sync
-    onSnapshot(doc(db, "lab", "data"), (docSnap) => {
-        if (docSnap.exists()) {
+    db.collection("lab").doc("data").onSnapshot((docSnap) => {
+        if (docSnap.exists) {
             const data = docSnap.data();
             inventory = data.inventory || [];
             consumption = data.consumption || [];
             debts = data.debts || [];
             orders = data.orders || [];
             renderAll();
+            // Also render admin views if admin dashboard is visible
+            if (document.getElementById('adminDashboard').style.display === 'block') {
+                renderAdminOverview();
+                renderAdminInventory();
+            }
             updateSyncStatus(true, "☁️ متزامن تلقائياً");
         }
     });
@@ -1057,13 +1211,16 @@
         document.getElementById('password').value = '';
     };
 
-    window.adminLogin = function() {
+    window.adminLogin = async function() {
         const pwd = document.getElementById('adminPassword').value;
         if (pwd === ADMIN_PASSWORD) {
             document.getElementById('adminLoginScreen').style.display = 'none';
             document.getElementById('adminDashboard').style.display = 'block';
             document.getElementById('adminErrorMsg').classList.remove('show');
+            await loadFromFirebase(); // Load data first and WAIT
             renderAdminOverview();
+            renderAdminInventory();
+            renderAccountDays();
         } else {
             document.getElementById('adminErrorMsg').classList.add('show');
             document.getElementById('adminPassword').value = '';
@@ -1084,9 +1241,28 @@
     window.showAdminTab = function(tab, btn) {
         document.querySelectorAll('#adminDashboard .tab-content').forEach(t => t.classList.remove('active'));
         document.querySelectorAll('#adminDashboard .nav-tab').forEach(b => b.classList.remove('active'));
-        document.getElementById('admin' + tab.charAt(0).toUpperCase() + tab.slice(1) + 'Tab').classList.add('active');
+        // Fix tab ID: overview -> adminOverviewTab, adminInventory -> adminInventoryTab, accounts -> adminAccountsTab
+        const tabId = tab === 'overview' ? 'adminOverviewTab' : 
+                      tab === 'adminInventory' ? 'adminInventoryTab' :
+                      tab === 'accounts' ? 'adminAccountsTab' :
+                      tab === 'users' ? 'adminUsersTab' :
+                      tab === 'reports' ? 'adminReportsTab' :
+                      tab === 'settings' ? 'adminSettingsTab' : 'admin' + tab.charAt(0).toUpperCase() + tab.slice(1) + 'Tab';
+        document.getElementById(tabId).classList.add('active');
         btn.classList.add('active');
         if (tab === 'overview') renderAdminOverview();
+        if (tab === 'adminInventory') { 
+            console.log('Switching to adminInventory tab');
+            // If inventory is empty, wait for data then render
+            if (inventory.length === 0) {
+                loadFromFirebase().then(() => {
+                    setTimeout(() => renderAdminInventory(), 300);
+                });
+            } else {
+                renderAdminInventory();
+            }
+        }
+        if (tab === 'accounts') renderAccountDays();
         if (tab === 'users') renderUsers();
         if (tab === 'reports') renderReports();
     };
@@ -1168,6 +1344,371 @@
             document.getElementById('adminLowStockItems').innerHTML = lowHtml;
         }
     }
+
+    // ========== ADMIN INVENTORY ==========
+    window.renderAdminInventory = function() {
+        console.log('[Admin Inventory] Rendering, inventory count:', inventory.length);
+        const container = document.getElementById('adminInventoryTable');
+        if (!container) { console.error('[Admin Inventory] Container not found!'); return; }
+
+        const searchTerm = document.getElementById('adminInvSearch') ? document.getElementById('adminInvSearch').value.trim().toLowerCase() : '';
+
+        let filtered = inventory;
+        if (searchTerm) {
+            filtered = inventory.filter(i => i.name.toLowerCase().includes(searchTerm));
+        }
+
+        if (filtered.length === 0) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <div class="icon">📭</div>
+                    <div>${searchTerm ? 'لا توجد نتائج مطابقة للبحث' : (inventory.length === 0 ? 'جاري تحميل البيانات... <br><span style="font-size:13px; color:#999;">إذا استمرت المشكلة، راجع الاتصال بالإنترنت</span>' : 'لا يوجد مستلزمات مسجلة')}</div>
+                </div>`;
+            document.getElementById('adminInvTotalCost').textContent = '0 ج.م';
+            document.getElementById('adminInvTotalLab').textContent = '0 ج.م';
+            document.getElementById('adminInvTotalProfit').textContent = '0 ج.م';
+            return;
+        }
+
+        let html = `<table class="data-table">
+            <thead><tr>
+                <th>#</th>
+                <th>اسم المستلزم</th>
+                <th>النوع</th>
+                <th>الوحدة</th>
+                <th>سعر الوحدة (+8)</th>
+                <th>سعر اللاب</th>
+                <th>الكمية</th>
+                <th>الربح للوحدة</th>
+                <th>إجمالي الربح</th>
+                <th>إجراءات</th>
+            </tr></thead><tbody>`;
+
+        let totalCost = 0, totalLab = 0, totalProfit = 0;
+
+        filtered.forEach((item, i) => {
+            const adminPrice = (item.price || 0) + 8;
+            const labPrice = item.labPrice || adminPrice;
+            const unitProfit = labPrice - adminPrice;
+            const totalItemProfit = unitProfit * (item.qty || 0);
+            const totalItemCost = adminPrice * (item.qty || 0);
+            const totalItemLab = labPrice * (item.qty || 0);
+
+            totalCost += totalItemCost;
+            totalLab += totalItemLab;
+            totalProfit += totalItemProfit;
+
+            const catColor = item.category === 'فلاش' ? '#00838f' : item.category === 'كيميا' ? '#2e7d32' : item.category === 'كروت' ? '#7b1fa2' : '#999';
+            const catBg = item.category === 'فلاش' ? '#e0f7fa' : item.category === 'كيميا' ? '#e8f5e9' : item.category === 'كروت' ? '#f3e5f5' : '#f5f5f5';
+
+            html += `<tr>
+                <td>${i + 1}</td>
+                <td style="font-weight:600;">${item.name}</td>
+                <td><span style="background:${catBg}; color:${catColor}; padding:4px 12px; border-radius:20px; font-size:12px; font-weight:700;">${item.category || 'غير محدد'}</span></td>
+                <td>${item.unit}</td>
+                <td style="font-weight:600;">${adminPrice.toFixed(2)} ج.م</td>
+                <td><input type="number" value="${labPrice.toFixed(2)}" onchange="updateLabPrice(${item.id}, this.value)" step="0.01" style="width:90px; padding:6px; border:1px solid #ddd; border-radius:6px; text-align:center; font-weight:600; color:#FF9800;"></td>
+                <td>${item.qty}</td>
+                <td style="font-weight:700; color:${unitProfit >= 0 ? '#2e7d32' : '#c62828'};">${unitProfit.toFixed(2)} ج.م</td>
+                <td style="font-weight:700; color:${totalItemProfit >= 0 ? '#2e7d32' : '#c62828'};">${totalItemProfit.toFixed(2)} ج.م</td>
+                <td><button class="btn-delete" onclick="deleteInv(${item.id})">🗑️</button></td>
+            </tr>`;
+        });
+
+        html += '</tbody></table>';
+        container.innerHTML = html;
+
+        document.getElementById('adminInvTotalCost').textContent = totalCost.toFixed(2) + ' ج.م';
+        document.getElementById('adminInvTotalLab').textContent = totalLab.toFixed(2) + ' ج.م';
+        document.getElementById('adminInvTotalProfit').textContent = totalProfit.toFixed(2) + ' ج.م';
+    };
+
+    window.updateLabPrice = async function(id, val) {
+        const item = inventory.find(i => i.id === id);
+        if (item) { 
+            item.labPrice = parseFloat(val) || 0; 
+            await saveToFirebase(); 
+            renderAdminInventory(); 
+        }
+    };
+
+    // ========== ADMIN ACCOUNTS ==========
+    let adminAccounts = [];
+    let currentAccountMonth = new Date();
+    const ACCOUNTS_KEEP_DAYS = 60; // 2 months
+
+    function loadAdminAccounts() {
+        try {
+            const stored = localStorage.getItem('lab_admin_accounts');
+            if (stored) adminAccounts = JSON.parse(stored);
+        } catch (e) { adminAccounts = []; }
+    }
+
+    function saveAdminAccounts() {
+        try {
+            localStorage.setItem('lab_admin_accounts', JSON.stringify(adminAccounts));
+        } catch (e) {}
+    }
+
+    // Auto cleanup old daily records (keep 2 months)
+    function cleanupOldAccounts() {
+        const cutoff = new Date();
+        cutoff.setDate(cutoff.getDate() - ACCOUNTS_KEEP_DAYS);
+        const before = adminAccounts.length;
+        adminAccounts = adminAccounts.filter(a => new Date(a.date) >= cutoff);
+        if (adminAccounts.length !== before) saveAdminAccounts();
+    }
+
+    window.renderAccountDays = function() {
+        loadAdminAccounts();
+        cleanupOldAccounts();
+
+        const year = currentAccountMonth.getFullYear();
+        const month = currentAccountMonth.getMonth();
+        const monthsAr = ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+        document.getElementById('accountMonthLabel').textContent = monthsAr[month] + ' ' + year;
+
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        const container = document.getElementById('accountDaysGrid');
+
+        let html = '';
+        for (let d = 1; d <= daysInMonth; d++) {
+            const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+            const record = adminAccounts.find(a => a.date === dateStr);
+            const hasData = !!record;
+
+            html += `
+                <button onclick="openAccountDay('${dateStr}')" style="
+                    background: ${hasData ? 'linear-gradient(135deg, #4caf50 0%, #2e7d32 100%)' : 'linear-gradient(135deg, #1565C0 0%, #0d47a1 100%)'};
+                    color: white;
+                    border: none;
+                    padding: 15px 10px;
+                    border-radius: 12px;
+                    cursor: pointer;
+                    font-size: 16px;
+                    font-weight: 700;
+                    transition: all 0.3s;
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    gap: 4px;
+                    min-height: 70px;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                " onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 8px 20px rgba(0,0,0,0.25)';" 
+                   onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.15)';"
+                >
+                    <span style="font-size: 20px;">${d}</span>
+                    ${hasData ? `<span style="font-size: 11px; opacity: 0.9;">${record.net.toFixed(0)} ج.م</span>` : ''}
+                </button>
+            `;
+        }
+        container.innerHTML = html;
+
+        // Render monthly summary
+        renderAccountMonthlySummary(year, month);
+    };
+
+    window.changeAccountMonth = function(delta) {
+        currentAccountMonth.setMonth(currentAccountMonth.getMonth() + delta);
+        renderAccountDays();
+        document.getElementById('accountDayForm').style.display = 'none';
+    };
+
+    let currentAccountDate = '';
+
+    window.openAccountDay = function(dateStr) {
+        currentAccountDate = dateStr;
+        const d = new Date(dateStr + 'T00:00:00');
+        const monthsAr = ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+        document.getElementById('accountSelectedDay').textContent = `${d.getDate()} ${monthsAr[d.getMonth()]} ${d.getFullYear()}`;
+
+        const record = adminAccounts.find(a => a.date === dateStr);
+
+        // Auto-fill previous: if this day has a record, use its saved previous
+        // Otherwise, find the last day BEFORE this date and use its net
+        let prevValue = '';
+        if (record) {
+            prevValue = record.previous;
+        } else {
+            const prevRecords = adminAccounts
+                .filter(a => new Date(a.date) < new Date(dateStr))
+                .sort((a, b) => new Date(b.date) - new Date(a.date));
+            if (prevRecords.length > 0) {
+                prevValue = prevRecords[0].net;
+            }
+        }
+        document.getElementById('accInputPrev').value = prevValue;
+        document.getElementById('accInputMorning').value = record ? record.morning : '';
+        document.getElementById('accInputEvening').value = record ? record.evening : '';
+        document.getElementById('accInputExpenses').value = record ? record.expenses : '';
+
+        calculateAccountNet();
+        document.getElementById('accountDayForm').style.display = 'block';
+        document.getElementById('accountDayForm').scrollIntoView({ behavior: 'smooth' });
+    };
+
+    window.calculateAccountNet = function() {
+        const prev = parseFloat(document.getElementById('accInputPrev').value) || 0;
+        const morning = parseFloat(document.getElementById('accInputMorning').value) || 0;
+        const evening = parseFloat(document.getElementById('accInputEvening').value) || 0;
+        const expenses = parseFloat(document.getElementById('accInputExpenses').value) || 0;
+        const net = prev + morning + evening - expenses;
+
+        document.getElementById('accInputNet').value = net.toFixed(2);
+        document.getElementById('accPrevBalance').textContent = prev.toFixed(2);
+        document.getElementById('accMorning').textContent = morning.toFixed(2);
+        document.getElementById('accEvening').textContent = evening.toFixed(2);
+        document.getElementById('accExpenses').textContent = expenses.toFixed(2);
+        document.getElementById('accNet').textContent = net.toFixed(2);
+    };
+
+    window.saveAccountDay = function() {
+        const prev = parseFloat(document.getElementById('accInputPrev').value) || 0;
+        const morning = parseFloat(document.getElementById('accInputMorning').value) || 0;
+        const evening = parseFloat(document.getElementById('accInputEvening').value) || 0;
+        const expenses = parseFloat(document.getElementById('accInputExpenses').value) || 0;
+        const net = prev + morning + evening - expenses;
+
+        // Remove existing record for same date
+        adminAccounts = adminAccounts.filter(a => a.date !== currentAccountDate);
+
+        adminAccounts.push({
+            date: currentAccountDate,
+            previous: prev,
+            morning: morning,
+            evening: evening,
+            expenses: expenses,
+            net: net
+        });
+
+        saveAdminAccounts();
+        renderAccountDays();
+        alert('✅ تم حفظ بيانات اليوم بنجاح');
+    };
+
+    window.closeAccountDayForm = function() {
+        document.getElementById('accountDayForm').style.display = 'none';
+    };
+
+    function renderAccountMonthlySummary(year, month) {
+        const monthRecords = adminAccounts.filter(a => {
+            const d = new Date(a.date);
+            return d.getFullYear() === year && d.getMonth() === month;
+        }).sort((a, b) => new Date(a.date) - new Date(b.date)); // sort ascending by date
+
+        const container = document.getElementById('accountMonthlySummary');
+        if (monthRecords.length === 0) {
+            container.innerHTML = '';
+            return;
+        }
+
+        // Get carried balance from previous month (net of last day of previous month)
+        const prevMonthLastDay = adminAccounts
+            .filter(a => {
+                const d = new Date(a.date);
+                const prevMonth = month === 0 ? 11 : month - 1;
+                const prevYear = month === 0 ? year - 1 : year;
+                return d.getFullYear() === prevYear && d.getMonth() === prevMonth;
+            })
+            .sort((a, b) => new Date(a.date) - new Date(b.date));
+
+        const carriedBalance = prevMonthLastDay.length > 0 ? prevMonthLastDay[prevMonthLastDay.length - 1].net : 0;
+
+        let totalMorning = 0, totalEvening = 0, totalExpenses = 0;
+        monthRecords.forEach(r => {
+            totalMorning += r.morning;
+            totalEvening += r.evening;
+            totalExpenses += r.expenses;
+        });
+
+        // Monthly net = carried balance + total morning + total evening - total expenses
+        const totalNet = carriedBalance + totalMorning + totalEvening - totalExpenses;
+
+        // For display: totalPrev shows the carried balance from previous month
+        const totalPrev = carriedBalance;
+
+        container.innerHTML = `
+            <div style="background: linear-gradient(135deg, #1565C0 0%, #0d47a1 100%); color: white; border-radius: 16px; padding: 20px; margin-top: 20px;">
+                <h3 style="margin: 0 0 15px 0; text-align: center;">📊 ملخص الشهر</h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 15px; text-align: center;">
+                    <div><div style="font-size: 24px; font-weight: 800;">${totalPrev.toFixed(2)}</div><div style="font-size: 13px; opacity: 0.9;">الرصيد المُرحَّل (صافي آخر يوم)</div></div>
+                    <div><div style="font-size: 24px; font-weight: 800;">${totalMorning.toFixed(2)}</div><div style="font-size: 13px; opacity: 0.9;">إجمالي الصباحي</div></div>
+                    <div><div style="font-size: 24px; font-weight: 800;">${totalEvening.toFixed(2)}</div><div style="font-size: 13px; opacity: 0.9;">إجمالي المسائي</div></div>
+                    <div><div style="font-size: 24px; font-weight: 800;">${totalExpenses.toFixed(2)}</div><div style="font-size: 13px; opacity: 0.9;">إجمالي المصاريف</div></div>
+                    <div><div style="font-size: 28px; font-weight: 800; color: #FFEB3B;">${totalNet.toFixed(2)}</div><div style="font-size: 13px; opacity: 0.9;">إجمالي الصافي</div></div>
+                </div>
+            </div>
+        `;
+    }
+
+    // ========== ANNUAL ACCOUNTS ==========
+    window.showAnnualAccounts = function() {
+        const container = document.getElementById('annualAccountsContent');
+
+        // Group by year-month
+        const monthGroups = {};
+        adminAccounts.forEach(a => {
+            const key = a.date.slice(0, 7); // "2026-07"
+            if (!monthGroups[key]) {
+                monthGroups[key] = { records: [], totalPrev: 0, totalMorning: 0, totalEvening: 0, totalExpenses: 0, totalNet: 0 };
+            }
+            monthGroups[key].records.push(a);
+            monthGroups[key].totalMorning += a.morning;
+            monthGroups[key].totalEvening += a.evening;
+            monthGroups[key].totalExpenses += a.expenses;
+        });
+        // After grouping, calculate:
+        // totalPrev = net of LAST day of PREVIOUS month (carried balance)
+        // totalNet = totalPrev + totalMorning + totalEvening - totalExpenses
+        const sortedKeys = Object.keys(monthGroups).sort();
+        sortedKeys.forEach((key, idx) => {
+            const g = monthGroups[key];
+            const sorted = g.records.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+            // Get carried balance from previous month
+            let carriedBalance = 0;
+            if (idx > 0) {
+                const prevKey = sortedKeys[idx - 1];
+                const prevRecords = monthGroups[prevKey].records.sort((a, b) => new Date(a.date) - new Date(b.date));
+                carriedBalance = prevRecords[prevRecords.length - 1].net;
+            }
+
+            g.totalPrev = carriedBalance;
+            g.totalNet = carriedBalance + g.totalMorning + g.totalEvening - g.totalExpenses;
+        });
+
+        const monthsAr = ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+        const keys = Object.keys(monthGroups).sort().reverse();
+
+        if (keys.length === 0) {
+            container.innerHTML = '<div style="text-align:center; color:#999; padding:40px;">لا توجد بيانات سنوية مسجلة</div>';
+        } else {
+            let html = '';
+            keys.forEach(key => {
+                const [y, m] = key.split('-');
+                const g = monthGroups[key];
+                html += `
+                    <div style="background: #f0f7ff; border-radius: 16px; padding: 20px; margin-bottom: 15px; border: 2px solid #1565C0;">
+                        <h3 style="color: #1565C0; margin: 0 0 15px 0;">📅 ${monthsAr[parseInt(m)-1]} ${y}</h3>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; text-align: center;">
+                            <div style="background: white; padding: 12px; border-radius: 12px;"><div style="font-size: 20px; font-weight: 800; color: #1565C0;">${g.totalPrev.toFixed(2)}</div><div style="font-size: 12px; color: #666;">الرصيد المُرحَّل</div></div>
+                            <div style="background: white; padding: 12px; border-radius: 12px;"><div style="font-size: 20px; font-weight: 800; color: #4caf50;">${g.totalMorning.toFixed(2)}</div><div style="font-size: 12px; color: #666;">الصباحي</div></div>
+                            <div style="background: white; padding: 12px; border-radius: 12px;"><div style="font-size: 20px; font-weight: 800; color: #FF9800;">${g.totalEvening.toFixed(2)}</div><div style="font-size: 12px; color: #666;">المسائي</div></div>
+                            <div style="background: white; padding: 12px; border-radius: 12px;"><div style="font-size: 20px; font-weight: 800; color: #c62828;">${g.totalExpenses.toFixed(2)}</div><div style="font-size: 12px; color: #666;">المصاريف</div></div>
+                            <div style="background: linear-gradient(135deg, #2e7d32 0%, #1b5e20 100%); color: white; padding: 12px; border-radius: 12px;"><div style="font-size: 22px; font-weight: 800;">${g.totalNet.toFixed(2)}</div><div style="font-size: 12px; opacity: 0.9;">الصافي</div></div>
+                        </div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        document.getElementById('annualAccountsModal').style.display = 'flex';
+    };
+
+    window.closeAnnualAccounts = function() {
+        document.getElementById('annualAccountsModal').style.display = 'none';
+    };
 
     // ========== USERS MANAGEMENT ==========
     window.addUser = function() {
@@ -1341,6 +1882,15 @@
         document.getElementById('confirmAdminPass').value = '';
     };
 
+    window.clearAllAccounts = function() {
+        if (!confirm('⚠️ هل أنت متأكد من مسح جميع الحسابات؟ سيتم حذف جميع الحسابات اليومية والشهرية والسنوية. لا يمكن التراجع عن هذا الإجراء!')) return;
+
+        adminAccounts = [];
+        saveAdminAccounts();
+        renderAccountDays();
+        alert('✅ تم مسح جميع الحسابات بنجاح');
+    };
+
     window.exportData = function() {
         const data = {
             inventory, consumption, debts, orders, users,
@@ -1393,8 +1943,6 @@
             document.getElementById('dashboard').style.display = 'block';
             document.getElementById('errorMsg').classList.remove('show');
             loadFromFirebase();
-            // Initialize stats month picker to current month
-            document.getElementById('statsMonthPicker').value = new Date().toISOString().slice(0, 7);
         } else {
             document.getElementById('errorMsg').classList.add('show');
             document.getElementById('password').value = '';
@@ -1430,6 +1978,14 @@
         renderDebts();
         renderDailyStatement();
         renderMonthlyStats();
+        // Also render admin views if visible
+        if (document.getElementById('adminDashboard').style.display === 'block') {
+            renderAdminOverview();
+            renderAdminInventory();
+            renderAccountDays();
+            renderUsers();
+            renderReports();
+        }
     }
 
     // ========== INVENTORY ==========
@@ -1442,7 +1998,7 @@
 
         if (!name) { alert('أدخل اسم المستلزم'); return; }
 
-        inventory.push({ id: Date.now(), name, category, unit, price, qty });
+        inventory.push({ id: Date.now(), name, category, unit, price, qty, labPrice: price + 8 });
         await saveToFirebase();
 
         document.getElementById('invName').value = '';
@@ -1599,7 +2155,7 @@
 
         // Also try to save to Firebase (optional backup)
         try {
-            await setDoc(doc(db, "lab_history", today), {
+            await db.collection("lab_history").doc(today).set({
                 items: historyItems,
                 date: today,
                 timestamp: new Date().toISOString()
