@@ -651,8 +651,8 @@
                             <input type="number" id="accInputEvening" placeholder="0" step="0.01" onchange="calculateAccountNet()">
                         </div>
                         <div class="input-group">
-                            <label>المصاريف</label>
-                            <input type="number" id="accInputExpenses" placeholder="0" step="0.01" onchange="calculateAccountNet()">
+                            <label>المصاريف (إجمالي)</label>
+                            <input type="number" id="accInputExpenses" placeholder="0" step="0.01" readonly style="background: #fff3e0; font-weight: 700;">
                         </div>
                         <div class="input-group">
                             <label style="color: #2e7d32; font-weight: 800;">الصافي (تلقائي)</label>
@@ -660,7 +660,37 @@
                         </div>
                     </div>
 
-                    <div style="text-align: center; margin-top: 15px;">
+                    <!-- Expense Details Section -->
+                    <div style="margin-top: 25px; padding-top: 20px; border-top: 2px dashed #1565C0;">
+                        <h4 style="color: #c62828; margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
+                            📝 بيان المصاريف
+                        </h4>
+                        <div class="hint-box" style="background: #ffebee; border-right-color: #c62828; color: #c62828;">
+                            💡 أضف تفاصيل كل مصروف (البيان + المبلغ + الجهة). يتم جمع المبالغ تلقائياً في خانة المصاريف الإجمالية.
+                        </div>
+
+                        <div class="input-row" style="margin-top: 15px;">
+                            <div class="input-group" style="flex: 2;">
+                                <label>البيان / الوصف</label>
+                                <input type="text" id="expDesc" placeholder="مثال: فاتورة كهرباء">
+                            </div>
+                            <div class="input-group">
+                                <label>المبلغ</label>
+                                <input type="number" id="expAmount" placeholder="0" step="0.01">
+                            </div>
+                            <div class="input-group" style="flex: 1.5;">
+                                <label>الجهة</label>
+                                <input type="text" id="expParty" placeholder="مثال: شركة الكهرباء">
+                            </div>
+                            <button class="btn-add" onclick="addExpenseDetail()" style="margin-top: 22px; background: linear-gradient(135deg, #c62828 0%, #b71c1c 100%);">
+                                ➕ إضافة مصروف
+                            </button>
+                        </div>
+
+                        <div id="expenseDetailsTable" style="margin-top: 15px;"></div>
+                    </div>
+
+                    <div style="text-align: center; margin-top: 25px;">
                         <button class="btn-add" onclick="saveAccountDay()">💾 حفظ بيانات اليوم</button>
                         <button onclick="closeAccountDayForm()" style="background: #999; color: white; border: none; padding: 12px 28px; border-radius: 12px; cursor: pointer; font-size: 15px; font-weight: 700; margin-right: 10px;">❌ إغلاق</button>
                     </div>
@@ -918,6 +948,14 @@
                     </div>
                 </div>
 
+                <!-- Search for Consumption -->
+                <div class="input-row" style="margin-bottom: 15px;">
+                    <div class="input-group" style="flex: 1;">
+                        <label>🔍 البحث في الاستهلاك</label>
+                        <input type="text" id="consSearch" placeholder="اكتب اسم المستلزم..." oninput="renderConsumption()" style="width: 100%;">
+                    </div>
+                </div>
+
                 <!-- Category Filters for Consumption -->
                 <div class="category-filters" id="consFilters">
                     <button class="cat-filter-btn active" onclick="setConsFilter('all', this)">📋 الكل</button>
@@ -1027,6 +1065,14 @@
                     <div class="stat-box">
                         <div class="number" id="statOrderTotal">0</div>
                         <div class="label">إجمالي قيمة الطلبية</div>
+                    </div>
+                </div>
+
+                <!-- Search for Orders -->
+                <div class="input-row" style="margin-bottom: 15px;">
+                    <div class="input-group" style="flex: 1;">
+                        <label>🔍 البحث في الطلبيات</label>
+                        <input type="text" id="orderSearch" placeholder="اكتب اسم المستلزم..." oninput="renderOrders()" style="width: 100%;">
                     </div>
                 </div>
 
@@ -1554,6 +1600,7 @@
     let adminAccounts = [];
     let currentAccountMonth = new Date();
     const ACCOUNTS_KEEP_DAYS = 60;
+    let currentExpenseDetails = []; // Array of {desc, amount, party}
 
     function loadAdminAccounts() {
         try {
@@ -1594,6 +1641,7 @@
             const record = adminAccounts.find(a => a.date === dateStr);
             const hasData = !!record;
 
+            const hasExpenses = hasData && record.expenseDetails && record.expenseDetails.length > 0;
             html += `
                 <button onclick="openAccountDay('${dateStr}')" style="
                     background: ${hasData ? 'linear-gradient(135deg, #4caf50 0%, #2e7d32 100%)' : 'linear-gradient(135deg, #1565C0 0%, #0d47a1 100%)'};
@@ -1611,11 +1659,13 @@
                     gap: 4px;
                     min-height: 70px;
                     box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                    position: relative;
                 " onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 8px 20px rgba(0,0,0,0.25)';" 
                    onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.15)';"
                 >
                     <span style="font-size: 20px;">${d}</span>
                     ${hasData ? `<span style="font-size: 11px; opacity: 0.9;">${record.net.toFixed(0)} ج.م</span>` : ''}
+                    ${hasExpenses ? `<span style="font-size: 9px; background: rgba(255,255,255,0.3); padding: 2px 6px; border-radius: 10px;">📝 ${record.expenseDetails.length} مصروف</span>` : ''}
                 </button>
             `;
         }
@@ -1664,9 +1714,10 @@
         const prev = parseFloat(document.getElementById('accInputPrev').value) || 0;
         const morning = parseFloat(document.getElementById('accInputMorning').value) || 0;
         const evening = parseFloat(document.getElementById('accInputEvening').value) || 0;
-        const expenses = parseFloat(document.getElementById('accInputExpenses').value) || 0;
+        const expenses = currentExpenseDetails.reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0);
         const net = prev + morning + evening - expenses;
 
+        document.getElementById('accInputExpenses').value = expenses.toFixed(2);
         document.getElementById('accInputNet').value = net.toFixed(2);
         document.getElementById('accPrevBalance').textContent = prev.toFixed(2);
         document.getElementById('accMorning').textContent = morning.toFixed(2);
@@ -1674,6 +1725,67 @@
         document.getElementById('accExpenses').textContent = expenses.toFixed(2);
         document.getElementById('accNet').textContent = net.toFixed(2);
     };
+
+    window.addExpenseDetail = function() {
+        const desc = document.getElementById('expDesc').value.trim();
+        const amount = parseFloat(document.getElementById('expAmount').value) || 0;
+        const party = document.getElementById('expParty').value.trim();
+
+        if (!desc) { alert('أدخل بيان المصروف'); return; }
+        if (amount <= 0) { alert('أدخل مبلغ صحيح'); return; }
+
+        currentExpenseDetails.push({ desc, amount, party });
+        document.getElementById('expDesc').value = '';
+        document.getElementById('expAmount').value = '';
+        document.getElementById('expParty').value = '';
+        document.getElementById('expDesc').focus();
+
+        renderExpenseDetails();
+        calculateAccountNet();
+    };
+
+    window.deleteExpenseDetail = function(idx) {
+        currentExpenseDetails.splice(idx, 1);
+        renderExpenseDetails();
+        calculateAccountNet();
+    };
+
+    function renderExpenseDetails() {
+        const container = document.getElementById('expenseDetailsTable');
+        if (currentExpenseDetails.length === 0) {
+            container.innerHTML = '<div style="text-align:center; color:#999; padding:15px;">لا توجد مصاريف مسجلة</div>';
+            return;
+        }
+
+        let html = `<table class="data-table" style="font-size:13px;">
+            <thead><tr>
+                <th>#</th>
+                <th>البيان</th>
+                <th>الجهة</th>
+                <th>المبلغ</th>
+                <th>إجراءات</th>
+            </tr></thead><tbody>`;
+
+        let total = 0;
+        currentExpenseDetails.forEach((e, i) => {
+            total += parseFloat(e.amount) || 0;
+            html += `<tr>
+                <td>${i + 1}</td>
+                <td style="font-weight:600;">${e.desc}</td>
+                <td>${e.party || '-'}</td>
+                <td style="font-weight:700; color:#c62828;">${parseFloat(e.amount).toFixed(2)} ج.م</td>
+                <td><button class="btn-delete" onclick="deleteExpenseDetail(${i})">🗑️</button></td>
+            </tr>`;
+        });
+
+        html += `<tr style="background:#ffebee; font-weight:700;">
+            <td colspan="3">إجمالي المصاريف</td>
+            <td style="font-weight:800; color:#c62828;">${total.toFixed(2)} ج.م</td>
+            <td></td>
+        </tr></tbody></table>`;
+
+        container.innerHTML = html;
+    }
 
     window.saveAccountDay = function() {
         const prev = parseFloat(document.getElementById('accInputPrev').value) || 0;
@@ -2265,6 +2377,7 @@
 
     function renderConsumption() {
         const container = document.getElementById('consumptionTable');
+        const searchTerm = document.getElementById('consSearch') ? document.getElementById('consSearch').value.trim().toLowerCase() : '';
 
         let totalItems = 0, totalDaily = 0, totalCost = 0;
         let yesterdayHtml = `<table class="data-table">
@@ -2281,13 +2394,16 @@
         if (consFilter !== 'all') {
             filtered = filtered.filter(i => i.category === consFilter);
         }
+        if (searchTerm) {
+            filtered = filtered.filter(i => i.name.toLowerCase().includes(searchTerm));
+        }
 
         if (filtered.length === 0) {
             container.innerHTML = `
                 <div class="empty-state">
                     <div class="icon">📭</div>
-                    <div>${consFilter !== 'all' ? 'لا توجد أصناف مطابقة للتصنيف' : 'لا يوجد بيانات'}</div>
-                    <div style="font-size:13px; margin-top:5px;">${consFilter !== 'all' ? 'جرب تصنيف آخر' : 'أضف المستلزمات في شاشة المخزون أولاً'}</div>
+                    <div>${consFilter !== 'all' || searchTerm ? 'لا توجد نتائج مطابقة' : 'لا يوجد بيانات'}</div>
+                    <div style="font-size:13px; margin-top:5px;">${consFilter !== 'all' || searchTerm ? 'جرب تغيير البحث أو الفلتر' : 'أضف المستلزمات في شاشة المخزون أولاً'}</div>
                 </div>`;
             document.getElementById('yesterdayTable').innerHTML = '<div style="text-align:center; color:#999; padding:20px;">لا يوجد سجل لليوم السابق</div>';
             updateConsumptionStats(0, 0, 0, 0);
@@ -2394,6 +2510,9 @@
         if (consFilter !== 'all') {
             filtered = filtered.filter(i => i.category === consFilter);
         }
+        if (searchTerm) {
+            filtered = filtered.filter(i => i.name.toLowerCase().includes(searchTerm));
+        }
 
         if (filtered.length === 0) {
             container.innerHTML = `
@@ -2455,10 +2574,14 @@
 
     function renderOrders() {
         const container = document.getElementById('ordersTable');
+        const searchTerm = document.getElementById('orderSearch') ? document.getElementById('orderSearch').value.trim().toLowerCase() : '';
 
         let filtered = inventory;
         if (orderFilter !== 'all') {
             filtered = filtered.filter(i => i.category === orderFilter);
+        }
+        if (searchTerm) {
+            filtered = filtered.filter(i => i.name.toLowerCase().includes(searchTerm));
         }
 
         orderItems = [];
@@ -2491,8 +2614,8 @@
             html += `
                 <div class="empty-state">
                     <div class="icon">✅</div>
-                    <div>${orderFilter !== 'all' ? 'لا توجد طلبيات مطلوبة في هذا التصنيف' : 'المخزون كافٍ لجميع الاحتياجات الشهرية'}</div>
-                    <div style="font-size:13px; margin-top:5px;">${orderFilter !== 'all' ? 'جرب تصنيف آخر' : 'لا تحتاج لطلبيات حالياً'}</div>
+                    <div>${orderFilter !== 'all' || searchTerm ? 'لا توجد نتائج مطابقة' : 'المخزون كافٍ لجميع الاحتياجات الشهرية'}</div>
+                    <div style="font-size:13px; margin-top:5px;">${orderFilter !== 'all' || searchTerm ? 'جرب تغيير البحث أو الفلتر' : 'لا تحتاج لطلبيات حالياً'}</div>
                 </div>`;
         } else {
             html += `<table class="data-table">
