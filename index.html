@@ -421,7 +421,6 @@
         }
     </style>
 <base target="_blank">
-<base target="_blank">
 </head>
 <body>
 
@@ -818,9 +817,7 @@
                     <button class="btn-add" onclick="clearAllAccounts()" style="background: linear-gradient(135deg, #c62828 0%, #b71c1c 100%);">
                         🗑️ مسح جميع الحسابات
                     </button>
-                    <button class="btn-add" onclick="clearMonthlyExpenses()" style="background: linear-gradient(135deg, #7b1fa2 0%, #4a148c 100%);">
-                        🗑️ مسح سجل المصاريف الشهرية
-                    </button>
+
                 </div>
             </div>
         </div>
@@ -1249,14 +1246,14 @@
         try {
             await db.collection("lab").doc("data").set({
                 inventory, consumption, debts, orders,
-                dailyRecords, adminAccounts, monthlyExpenses,
+                dailyRecords, adminAccounts,
                 updatedAt: new Date().toISOString()
             });
             updateSyncStatus(true, "☁️ متزامن مع السحابة");
         } catch (e) {
             console.error("Firebase save error:", e);
             updateSyncStatus(false, "⚠️ غير متصل - محفوظ محلياً");
-            localStorage.setItem('lab_inv_backup', JSON.stringify({inventory, consumption, debts, orders, dailyRecords, adminAccounts, monthlyExpenses}));
+            localStorage.setItem('lab_inv_backup', JSON.stringify({inventory, consumption, debts, orders, dailyRecords, adminAccounts}));
         }
     }
 
@@ -1272,11 +1269,9 @@
                 orders = data.orders || [];
                 dailyRecords = data.dailyRecords || [];
                 adminAccounts = data.adminAccounts || [];
-                monthlyExpenses = data.monthlyExpenses || [];
                 // Also save to localStorage as backup
                 localStorage.setItem('lab_daily_records', JSON.stringify(dailyRecords));
                 localStorage.setItem('lab_admin_accounts', JSON.stringify(adminAccounts));
-                localStorage.setItem('lab_monthly_expenses', JSON.stringify(monthlyExpenses));
                 updateSyncStatus(true, "☁️ متصل بالسحابة");
                 if (document.getElementById('adminDashboard').style.display === 'block') {
                     renderAdminOverview();
@@ -1292,7 +1287,6 @@
                     orders = data.orders || [];
                     dailyRecords = data.dailyRecords || [];
                     adminAccounts = data.adminAccounts || [];
-                    monthlyExpenses = data.monthlyExpenses || [];
                     await saveToFirebase();
                 }
             }
@@ -1307,7 +1301,6 @@
                 orders = data.orders || [];
                 dailyRecords = data.dailyRecords || [];
                 adminAccounts = data.adminAccounts || [];
-                monthlyExpenses = data.monthlyExpenses || [];
             }
             updateSyncStatus(false, "⚠️ غير متصل - وضع عدم الاتصال");
         }
@@ -1329,11 +1322,9 @@
             orders = data.orders || [];
             dailyRecords = data.dailyRecords || [];
             adminAccounts = data.adminAccounts || [];
-            monthlyExpenses = data.monthlyExpenses || [];
             // Sync to localStorage
             localStorage.setItem('lab_daily_records', JSON.stringify(dailyRecords));
             localStorage.setItem('lab_admin_accounts', JSON.stringify(adminAccounts));
-            localStorage.setItem('lab_monthly_expenses', JSON.stringify(monthlyExpenses));
             renderAll();
             if (document.getElementById('adminDashboard').style.display === 'block') {
                 renderAdminOverview();
@@ -1630,17 +1621,14 @@
     let currentAccountMonth = new Date();
     const ACCOUNTS_KEEP_DAYS = 60;
     let currentExpenseDetails = []; // Array of {desc, amount, party}
-    let monthlyExpenses = []; // Separate monthly expense record: {id, year, month, date, desc, amount, party}
+    
 
     function loadAdminAccounts() {
         try {
             const stored = localStorage.getItem('lab_admin_accounts');
             if (stored) adminAccounts = JSON.parse(stored);
         } catch (e) { adminAccounts = []; }
-        try {
-            const storedExp = localStorage.getItem('lab_monthly_expenses');
-            if (storedExp) monthlyExpenses = JSON.parse(storedExp);
-        } catch (e) { monthlyExpenses = []; }
+
     }
 
     function saveAdminAccounts() {
@@ -1649,11 +1637,7 @@
         } catch (e) {}
     }
 
-    function saveMonthlyExpenses() {
-        try {
-            localStorage.setItem('lab_monthly_expenses', JSON.stringify(monthlyExpenses));
-        } catch (e) {}
-    }
+
 
     function cleanupOldAccounts() {
         const cutoff = new Date();
@@ -1681,8 +1665,7 @@
             const record = adminAccounts.find(a => a.date === dateStr);
             const hasData = !!record;
 
-            const dayExpenses = monthlyExpenses.filter(e => e.date === dateStr);
-            const hasExpenses = dayExpenses.length > 0;
+            const hasExpenses = hasData && record.expenseDetails && record.expenseDetails.length > 0;
             html += `
                 <button onclick="openAccountDay('${dateStr}')" style="
                     background: ${hasData ? 'linear-gradient(135deg, #4caf50 0%, #2e7d32 100%)' : 'linear-gradient(135deg, #1565C0 0%, #0d47a1 100%)'};
@@ -1706,7 +1689,7 @@
                 >
                     <span style="font-size: 20px;">${d}</span>
                     ${hasData ? `<span style="font-size: 11px; opacity: 0.9;">${record.net.toFixed(0)} ج.م</span>` : ''}
-                    ${hasExpenses ? `<span style="font-size: 9px; background: rgba(255,255,255,0.3); padding: 2px 6px; border-radius: 10px;">📝 ${dayExpenses.length} مصروف</span>` : ''}
+                    ${hasExpenses ? `<span style="font-size: 9px; background: rgba(255,255,255,0.3); padding: 2px 6px; border-radius: 10px;">📝 ${record.expenseDetails.length} مصروف</span>` : ''}
                 </button>
             `;
         }
@@ -1724,27 +1707,39 @@
 
     window.openAccountDay = function(dateStr) {
         currentAccountDate = dateStr;
+        // ALWAYS clear currentExpenseDetails first
+        currentExpenseDetails = [];
+
         const d = new Date(dateStr + 'T00:00:00');
         const monthsAr = ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
         document.getElementById('accountSelectedDay').textContent = `${d.getDate()} ${monthsAr[d.getMonth()]} ${d.getFullYear()}`;
 
         const record = adminAccounts.find(a => a.date === dateStr);
 
+        // Calculate previous balance: net of the last recorded day BEFORE this date
         let prevValue = '';
-        if (record) {
-            prevValue = record.previous;
-        } else {
-            const prevRecords = adminAccounts
-                .filter(a => new Date(a.date) < new Date(dateStr))
-                .sort((a, b) => new Date(b.date) - new Date(a.date));
-            if (prevRecords.length > 0) {
-                prevValue = prevRecords[0].net;
-            }
+        const prevRecords = adminAccounts
+            .filter(a => new Date(a.date + 'T00:00:00') < new Date(dateStr + 'T00:00:00'))
+            .sort((a, b) => new Date(a.date + 'T00:00:00') - new Date(b.date + 'T00:00:00'));
+        if (prevRecords.length > 0) {
+            prevValue = prevRecords[prevRecords.length - 1].net;
         }
+
         document.getElementById('accInputPrev').value = prevValue;
         document.getElementById('accInputMorning').value = record ? record.morning : '';
         document.getElementById('accInputEvening').value = record ? record.evening : '';
-        document.getElementById('accInputExpenses').value = record ? record.expenses : '';
+
+        // Load expense details ONLY from this day's own record
+        if (record && record.expenseDetails && record.expenseDetails.length > 0) {
+            currentExpenseDetails = record.expenseDetails.map(e => ({
+                desc: e.desc,
+                amount: parseFloat(e.amount) || 0,
+                party: e.party || ''
+            }));
+        } else {
+            currentExpenseDetails = [];
+        }
+        renderExpenseDetails();
 
         calculateAccountNet();
         document.getElementById('accountDayForm').style.display = 'block';
@@ -1755,6 +1750,7 @@
         const prev = parseFloat(document.getElementById('accInputPrev').value) || 0;
         const morning = parseFloat(document.getElementById('accInputMorning').value) || 0;
         const evening = parseFloat(document.getElementById('accInputEvening').value) || 0;
+        // Calculate expenses ONLY from currentExpenseDetails (this day only)
         const expenses = currentExpenseDetails.reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0);
         const net = prev + morning + evening - expenses;
 
@@ -1832,18 +1828,21 @@
         const prev = parseFloat(document.getElementById('accInputPrev').value) || 0;
         const morning = parseFloat(document.getElementById('accInputMorning').value) || 0;
         const evening = parseFloat(document.getElementById('accInputEvening').value) || 0;
-        const expenses = parseFloat(document.getElementById('accInputExpenses').value) || 0;
+        const expenses = currentExpenseDetails.reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0);
         const net = prev + morning + evening - expenses;
 
+        // Remove existing record for this date
         adminAccounts = adminAccounts.filter(a => a.date !== currentAccountDate);
 
+        // Save with expenseDetails attached to THIS day only
         adminAccounts.push({
             date: currentAccountDate,
             previous: prev,
             morning: morning,
             evening: evening,
             expenses: expenses,
-            net: net
+            net: net,
+            expenseDetails: JSON.parse(JSON.stringify(currentExpenseDetails)) // Deep copy
         });
 
         saveAdminAccounts();
@@ -1855,28 +1854,15 @@
         document.getElementById('accountDayForm').style.display = 'none';
     };
 
-    async function recalcSubsequentDays(fromDate) {
-        const fromD = new Date(fromDate + 'T00:00:00');
-        const year = fromD.getFullYear();
-        const month = fromD.getMonth();
-
-        // Get remaining days in this month after fromDate, sorted by date
-        const monthDays = adminAccounts
-            .filter(a => {
-                const d = new Date(a.date + 'T00:00:00');
-                return d.getFullYear() === year && d.getMonth() === month && d > fromD;
-            })
-            .sort((a, b) => new Date(a.date + 'T00:00:00') - new Date(b.date + 'T00:00:00'));
+    async function recalcAllSubsequentDays() {
+        // Sort all accounts by date
+        adminAccounts.sort((a, b) => new Date(a.date + 'T00:00:00') - new Date(b.date + 'T00:00:00'));
 
         // Recalculate each day's previous balance and net
-        for (let i = 0; i < monthDays.length; i++) {
-            const day = monthDays[i];
-            // Find the previous recorded day (any date before this one)
-            const prevDays = adminAccounts
-                .filter(a => new Date(a.date + 'T00:00:00') < new Date(day.date + 'T00:00:00'))
-                .sort((a, b) => new Date(a.date + 'T00:00:00') - new Date(b.date + 'T00:00:00'));
-
-            const newPrev = prevDays.length > 0 ? prevDays[prevDays.length - 1].net : 0;
+        for (let i = 0; i < adminAccounts.length; i++) {
+            const day = adminAccounts[i];
+            // Previous balance = net of the last recorded day before this one
+            const newPrev = i > 0 ? adminAccounts[i - 1].net : 0;
             day.previous = newPrev;
             day.net = newPrev + (day.morning || 0) + (day.evening || 0) - (day.expenses || 0);
         }
@@ -1907,8 +1893,8 @@
         currentExpenseDetails = [];
         renderExpenseDetails();
 
-        // Recalculate subsequent days
-        await recalcSubsequentDays(currentAccountDate);
+        // Recalculate ALL subsequent days
+        await recalcAllSubsequentDays();
 
         saveAdminAccounts();
         await saveToFirebase();
@@ -1922,40 +1908,13 @@
 
         const deletedDate = currentAccountDate;
 
-        // Remove from adminAccounts
+        // Remove from adminAccounts (expenseDetails goes with it automatically)
         adminAccounts = adminAccounts.filter(a => a.date !== deletedDate);
 
-        // Also remove expenses for this day from monthlyExpenses
-        monthlyExpenses = monthlyExpenses.filter(e => e.date !== deletedDate);
-
-        // Recalculate subsequent days in the same month
-        const deletedD = new Date(deletedDate + 'T00:00:00');
-        const year = deletedD.getFullYear();
-        const month = deletedD.getMonth();
-
-        // Get remaining days in this month, sorted by date
-        const monthDays = adminAccounts
-            .filter(a => {
-                const d = new Date(a.date + 'T00:00:00');
-                return d.getFullYear() === year && d.getMonth() === month;
-            })
-            .sort((a, b) => new Date(a.date + 'T00:00:00') - new Date(b.date + 'T00:00:00'));
-
-        // Recalculate each day's previous balance and net
-        for (let i = 0; i < monthDays.length; i++) {
-            const day = monthDays[i];
-            // Find the previous recorded day (any date before this one)
-            const prevDays = adminAccounts
-                .filter(a => new Date(a.date + 'T00:00:00') < new Date(day.date + 'T00:00:00'))
-                .sort((a, b) => new Date(a.date + 'T00:00:00') - new Date(b.date + 'T00:00:00'));
-
-            const newPrev = prevDays.length > 0 ? prevDays[prevDays.length - 1].net : 0;
-            day.previous = newPrev;
-            day.net = newPrev + (day.morning || 0) + (day.evening || 0) - (day.expenses || 0);
-        }
+        // Recalculate ALL subsequent days
+        await recalcAllSubsequentDays();
 
         saveAdminAccounts();
-        saveMonthlyExpenses();
         await saveToFirebase();
 
         document.getElementById('accountDayForm').style.display = 'none';
@@ -1964,82 +1923,137 @@
     };
 
     function renderAccountMonthlySummary(year, month) {
-        const monthRecords = adminAccounts.filter(a => {
-            const d = new Date(a.date);
-            return d.getFullYear() === year && d.getMonth() === month;
-        }).sort((a, b) => new Date(a.date) - new Date(b.date));
-
         const container = document.getElementById('accountMonthlySummary');
+
+        // Sort all accounts by date
+        adminAccounts.sort((a, b) => new Date(a.date + 'T00:00:00') - new Date(b.date + 'T00:00:00'));
+
+        const monthRecords = adminAccounts.filter(a => {
+            const d = new Date(a.date + 'T00:00:00');
+            return d.getFullYear() === year && d.getMonth() === month;
+        });
+
         if (monthRecords.length === 0) {
-            container.innerHTML = '';
+            container.innerHTML = '<div style="text-align:center; color:#999; padding:20px;">لا توجد أيام مسجلة في هذا الشهر</div>';
             return;
         }
 
-        const prevMonthLastDay = adminAccounts
-            .filter(a => {
-                const d = new Date(a.date);
-                const prevMonth = month === 0 ? 11 : month - 1;
-                const prevYear = month === 0 ? year - 1 : year;
-                return d.getFullYear() === prevYear && d.getMonth() === prevMonth;
-            })
-            .sort((a, b) => new Date(a.date) - new Date(b.date));
+        // Get carried balance: net of last recorded day BEFORE this month starts
+        const prevRecords = adminAccounts
+            .filter(a => new Date(a.date + 'T00:00:00') < new Date(`${year}-${String(month+1).padStart(2,'0')}-01T00:00:00`))
+            .sort((a, b) => new Date(a.date + 'T00:00:00') - new Date(b.date + 'T00:00:00'));
+        const carriedBalance = prevRecords.length > 0 ? prevRecords[prevRecords.length - 1].net : 0;
 
-        const carriedBalance = prevMonthLastDay.length > 0 ? prevMonthLastDay[prevMonthLastDay.length - 1].net : 0;
-
+        // Calculate totals from recorded days in this month
         let totalMorning = 0, totalEvening = 0, totalExpenses = 0;
         monthRecords.forEach(r => {
-            totalMorning += r.morning;
-            totalEvening += r.evening;
-            totalExpenses += r.expenses;
+            totalMorning += r.morning || 0;
+            totalEvening += r.evening || 0;
+            totalExpenses += r.expenses || 0;
         });
 
-        const totalNet = carriedBalance + totalMorning + totalEvening - totalExpenses;
-        const totalPrev = carriedBalance;
+        // The TRUE net = net of the last recorded day in this month
+        // (which equals carriedBalance + sum of all daily changes)
+        const totalNet = monthRecords[monthRecords.length - 1].net;
 
-        container.innerHTML = `
-            <div style="background: linear-gradient(135deg, #1565C0 0%, #0d47a1 100%); color: white; border-radius: 16px; padding: 20px; margin-top: 20px;">
-                <h3 style="margin: 0 0 15px 0; text-align: center;">📊 ملخص الشهر</h3>
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 15px; text-align: center;">
-                    <div><div style="font-size: 24px; font-weight: 800;">${totalPrev.toFixed(2)}</div><div style="font-size: 13px; opacity: 0.9;">الرصيد المُرحَّل (صافي آخر يوم)</div></div>
-                    <div><div style="font-size: 24px; font-weight: 800;">${totalMorning.toFixed(2)}</div><div style="font-size: 13px; opacity: 0.9;">إجمالي الصباحي</div></div>
-                    <div><div style="font-size: 24px; font-weight: 800;">${totalEvening.toFixed(2)}</div><div style="font-size: 13px; opacity: 0.9;">إجمالي المسائي</div></div>
-                    <div><div style="font-size: 24px; font-weight: 800;">${totalExpenses.toFixed(2)}</div><div style="font-size: 13px; opacity: 0.9;">إجمالي المصاريف</div></div>
-                    <div><div style="font-size: 28px; font-weight: 800; color: #FFEB3B;">${totalNet.toFixed(2)}</div><div style="font-size: 13px; opacity: 0.9;">إجمالي الصافي</div></div>
-                </div>
+        // Collect all expenses from this month (from each day's expenseDetails)
+        let allMonthExpenses = [];
+        monthRecords.forEach(r => {
+            if (r.expenseDetails && r.expenseDetails.length > 0) {
+                r.expenseDetails.forEach(exp => {
+                    allMonthExpenses.push({
+                        date: r.date,
+                        desc: exp.desc,
+                        amount: parseFloat(exp.amount) || 0,
+                        party: exp.party || ''
+                    });
+                });
+            }
+        });
+
+        let html = '';
+
+        // Monthly summary card
+        html += `<div style="background: linear-gradient(135deg, #1565C0 0%, #0d47a1 100%); color: white; border-radius: 16px; padding: 20px; margin-top: 20px;">
+            <h3 style="margin: 0 0 15px 0; text-align: center;">📊 ملخص الشهر</h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 15px; text-align: center;">
+                <div><div style="font-size: 24px; font-weight: 800;">${carriedBalance.toFixed(2)}</div><div style="font-size: 13px; opacity: 0.9;">الرصيد المُرحَّل</div></div>
+                <div><div style="font-size: 24px; font-weight: 800;">${totalMorning.toFixed(2)}</div><div style="font-size: 13px; opacity: 0.9;">إجمالي الصباحي</div></div>
+                <div><div style="font-size: 24px; font-weight: 800;">${totalEvening.toFixed(2)}</div><div style="font-size: 13px; opacity: 0.9;">إجمالي المسائي</div></div>
+                <div><div style="font-size: 24px; font-weight: 800;">${totalExpenses.toFixed(2)}</div><div style="font-size: 13px; opacity: 0.9;">إجمالي المصاريف</div></div>
+                <div><div style="font-size: 28px; font-weight: 800; color: #FFEB3B;">${totalNet.toFixed(2)}</div><div style="font-size: 13px; opacity: 0.9;">الصافي النهائي</div></div>
             </div>
-        `;
+        </div>`;
+
+        // Days breakdown table
+        html += `<div style="margin-top: 25px;"><h3 style="color: #1565C0; margin: 0 0 15px 0; padding-bottom: 10px; border-bottom: 2px solid #1565C0;">📋 تفاصيل الأيام المسجلة</h3>
+        <table class="data-table" style="font-size: 13px;"><thead><tr><th>التاريخ</th><th>الحساب السابق</th><th>الصباحي</th><th>المسائي</th><th>المصاريف</th><th>الصافي</th></tr></thead><tbody>`;
+
+        monthRecords.forEach(r => {
+            const rd = new Date(r.date + 'T00:00:00');
+            const dateStr = `${rd.getDate()}/${rd.getMonth()+1}/${rd.getFullYear()}`;
+            html += `<tr><td style="font-weight:600;">${dateStr}</td><td>${(r.previous || 0).toFixed(2)}</td><td>${(r.morning || 0).toFixed(2)}</td><td>${(r.evening || 0).toFixed(2)}</td><td style="color:#c62828; font-weight:600;">${(r.expenses || 0).toFixed(2)}</td><td style="font-weight:700; color:${r.net >= 0 ? '#2e7d32' : '#c62828'};">${r.net.toFixed(2)}</td></tr>`;
+        });
+
+        html += `</tbody></table></div>`;
+
+        // Monthly Expense Details Table
+        if (allMonthExpenses.length > 0) {
+            html += `<div style="margin-top: 25px;"><h3 style="color: #c62828; margin: 0 0 15px 0; padding-bottom: 10px; border-bottom: 2px solid #c62828; display: flex; align-items: center; gap: 8px;">📝 بيان المصاريف الشهرية (${allMonthExpenses.length} مصروف)</h3>
+            <table class="data-table" style="margin-top: 15px; font-size: 13px;"><thead><tr><th>#</th><th>التاريخ</th><th>البيان</th><th>الجهة</th><th>المبلغ</th></tr></thead><tbody>`;
+
+            allMonthExpenses.forEach((e, i) => {
+                const ed = new Date(e.date + 'T00:00:00');
+                const dateStr = `${ed.getDate()}/${ed.getMonth()+1}/${ed.getFullYear()}`;
+                html += `<tr><td>${i + 1}</td><td>${dateStr}</td><td style="font-weight:600;">${e.desc}</td><td>${e.party || '-'}</td><td style="font-weight:700; color:#c62828;">${e.amount.toFixed(2)} ج.م</td></tr>`;
+            });
+
+            html += `<tr style="background:#ffebee; font-weight:700;"><td colspan="4">إجمالي المصاريف الشهرية</td><td style="font-weight:800; color:#c62828;">${totalExpenses.toFixed(2)} ج.م</td></tr></tbody></table></div>`;
+        }
+
+        container.innerHTML = html;
     }
 
     // ========== ANNUAL ACCOUNTS ==========
     window.showAnnualAccounts = function() {
         const container = document.getElementById('annualAccountsContent');
 
+        // Sort all accounts by date
+        adminAccounts.sort((a, b) => new Date(a.date + 'T00:00:00') - new Date(b.date + 'T00:00:00'));
+
+        // Group daily accounts by year-month
         const monthGroups = {};
         adminAccounts.forEach(a => {
             const key = a.date.slice(0, 7);
             if (!monthGroups[key]) {
-                monthGroups[key] = { records: [], totalPrev: 0, totalMorning: 0, totalEvening: 0, totalExpenses: 0, totalNet: 0 };
+                monthGroups[key] = { records: [], totalMorning: 0, totalEvening: 0, totalExpenses: 0 };
             }
             monthGroups[key].records.push(a);
-            monthGroups[key].totalMorning += a.morning;
-            monthGroups[key].totalEvening += a.evening;
-            monthGroups[key].totalExpenses += a.expenses;
+            monthGroups[key].totalMorning += a.morning || 0;
+            monthGroups[key].totalEvening += a.evening || 0;
+            monthGroups[key].totalExpenses += a.expenses || 0;
         });
 
+        // Calculate carried balance and net for each month
         const sortedKeys = Object.keys(monthGroups).sort();
         sortedKeys.forEach((key, idx) => {
             const g = monthGroups[key];
-            const sorted = g.records.sort((a, b) => new Date(a.date) - new Date(b.date));
+            const [yStr, mStr] = key.split('-');
+            const year = parseInt(yStr);
+            const month = parseInt(mStr) - 1;
 
-            let carriedBalance = 0;
-            if (idx > 0) {
-                const prevKey = sortedKeys[idx - 1];
-                const prevRecords = monthGroups[prevKey].records.sort((a, b) => new Date(a.date) - new Date(b.date));
-                carriedBalance = prevRecords[prevRecords.length - 1].net;
-            }
+            // Carried balance = net of last recorded day BEFORE this month
+            const monthStart = new Date(`${year}-${String(month+1).padStart(2,'0')}-01T00:00:00`);
+            const prevRecords = adminAccounts
+                .filter(a => new Date(a.date + 'T00:00:00') < monthStart)
+                .sort((a, b) => new Date(a.date + 'T00:00:00') - new Date(b.date + 'T00:00:00'));
+            const carriedBalance = prevRecords.length > 0 ? prevRecords[prevRecords.length - 1].net : 0;
 
-            g.totalPrev = carriedBalance;
-            g.totalNet = carriedBalance + g.totalMorning + g.totalEvening - g.totalExpenses;
+            // Net = net of last recorded day in this month (cumulative)
+            const lastDayNet = g.records[g.records.length - 1].net;
+
+            g.carriedBalance = carriedBalance;
+            g.lastDayNet = lastDayNet;
         });
 
         const monthsAr = ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
@@ -2052,18 +2066,19 @@
             keys.forEach(key => {
                 const [y, m] = key.split('-');
                 const g = monthGroups[key];
-                html += `
-                    <div style="background: #f0f7ff; border-radius: 16px; padding: 20px; margin-bottom: 15px; border: 2px solid #1565C0;">
-                        <h3 style="color: #1565C0; margin: 0 0 15px 0;">📅 ${monthsAr[parseInt(m)-1]} ${y}</h3>
-                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; text-align: center;">
-                            <div style="background: white; padding: 12px; border-radius: 12px;"><div style="font-size: 20px; font-weight: 800; color: #1565C0;">${g.totalPrev.toFixed(2)}</div><div style="font-size: 12px; color: #666;">الرصيد المُرحَّل</div></div>
-                            <div style="background: white; padding: 12px; border-radius: 12px;"><div style="font-size: 20px; font-weight: 800; color: #4caf50;">${g.totalMorning.toFixed(2)}</div><div style="font-size: 12px; color: #666;">الصباحي</div></div>
-                            <div style="background: white; padding: 12px; border-radius: 12px;"><div style="font-size: 20px; font-weight: 800; color: #FF9800;">${g.totalEvening.toFixed(2)}</div><div style="font-size: 12px; color: #666;">المسائي</div></div>
-                            <div style="background: white; padding: 12px; border-radius: 12px;"><div style="font-size: 20px; font-weight: 800; color: #c62828;">${g.totalExpenses.toFixed(2)}</div><div style="font-size: 12px; color: #666;">المصاريف</div></div>
-                            <div style="background: linear-gradient(135deg, #2e7d32 0%, #1b5e20 100%); color: white; padding: 12px; border-radius: 12px;"><div style="font-size: 22px; font-weight: 800;">${g.totalNet.toFixed(2)}</div><div style="font-size: 12px; opacity: 0.9;">الصافي</div></div>
-                        </div>
+                html += `<div style="background: #f0f7ff; border-radius: 16px; padding: 20px; margin-bottom: 15px; border: 2px solid #1565C0;">
+                    <h3 style="color: #1565C0; margin: 0 0 15px 0;">📅 ${monthsAr[parseInt(m)-1]} ${y}</h3>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; text-align: center;">
+                        <div style="background: white; padding: 12px; border-radius: 12px;"><div style="font-size: 20px; font-weight: 800; color: #1565C0;">${g.carriedBalance.toFixed(2)}</div><div style="font-size: 12px; color: #666;">الرصيد المُرحَّل</div></div>
+                        <div style="background: white; padding: 12px; border-radius: 12px;"><div style="font-size: 20px; font-weight: 800; color: #4caf50;">${g.totalMorning.toFixed(2)}</div><div style="font-size: 12px; color: #666;">الصباحي</div></div>
+                        <div style="background: white; padding: 12px; border-radius: 12px;"><div style="font-size: 20px; font-weight: 800; color: #FF9800;">${g.totalEvening.toFixed(2)}</div><div style="font-size: 12px; color: #666;">المسائي</div></div>
+                        <div style="background: white; padding: 12px; border-radius: 12px;"><div style="font-size: 20px; font-weight: 800; color: #c62828;">${g.totalExpenses.toFixed(2)}</div><div style="font-size: 12px; color: #666;">المصاريف</div></div>
+                        <div style="background: linear-gradient(135deg, #2e7d32 0%, #1b5e20 100%); color: white; padding: 12px; border-radius: 12px;"><div style="font-size: 22px; font-weight: 800;">${g.lastDayNet.toFixed(2)}</div><div style="font-size: 12px; opacity: 0.9;">الصافي</div></div>
                     </div>
-                `;
+                    <div style="text-align: center; margin-top: 10px; font-size: 12px; color: #666;">
+                        📅 صافي آخر يوم مسجل: ${g.lastDayNet.toFixed(2)} ج.م
+                    </div>
+                </div>`;
             });
             container.innerHTML = html;
         }
@@ -2251,19 +2266,12 @@
         alert('✅ تم مسح جميع الحسابات بنجاح');
     };
 
-    window.clearMonthlyExpenses = function() {
-        if (!confirm('⚠️ هل أنت متأكد من مسح سجل المصاريف الشهرية؟ سيتم حذف جميع المصاريف المسجلة في السجل الشهري. لا يمكن التراجع عن هذا الإجراء!')) return;
 
-        monthlyExpenses = [];
-        saveMonthlyExpenses();
-        renderAccountDays();
-        alert('✅ تم مسح سجل المصاريف الشهرية بنجاح');
-    };
 
     window.exportData = function() {
         const data = {
             inventory, consumption, debts, orders, users,
-            adminAccounts, monthlyExpenses,
+            adminAccounts,
             exportDate: new Date().toISOString()
         };
         const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
@@ -2296,10 +2304,6 @@
                     if (data.adminAccounts) {
                         adminAccounts = data.adminAccounts;
                         saveAdminAccounts();
-                    }
-                    if (data.monthlyExpenses) {
-                        monthlyExpenses = data.monthlyExpenses;
-                        saveMonthlyExpenses();
                     }
                     await saveToFirebase();
                     renderAll();
