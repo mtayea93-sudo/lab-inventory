@@ -421,6 +421,7 @@
         }
     </style>
 <base target="_blank">
+<base target="_blank">
 </head>
 <body>
 
@@ -1854,8 +1855,35 @@
         document.getElementById('accountDayForm').style.display = 'none';
     };
 
+    async function recalcSubsequentDays(fromDate) {
+        const fromD = new Date(fromDate + 'T00:00:00');
+        const year = fromD.getFullYear();
+        const month = fromD.getMonth();
+
+        // Get remaining days in this month after fromDate, sorted by date
+        const monthDays = adminAccounts
+            .filter(a => {
+                const d = new Date(a.date + 'T00:00:00');
+                return d.getFullYear() === year && d.getMonth() === month && d > fromD;
+            })
+            .sort((a, b) => new Date(a.date + 'T00:00:00') - new Date(b.date + 'T00:00:00'));
+
+        // Recalculate each day's previous balance and net
+        for (let i = 0; i < monthDays.length; i++) {
+            const day = monthDays[i];
+            // Find the previous recorded day (any date before this one)
+            const prevDays = adminAccounts
+                .filter(a => new Date(a.date + 'T00:00:00') < new Date(day.date + 'T00:00:00'))
+                .sort((a, b) => new Date(a.date + 'T00:00:00') - new Date(b.date + 'T00:00:00'));
+
+            const newPrev = prevDays.length > 0 ? prevDays[prevDays.length - 1].net : 0;
+            day.previous = newPrev;
+            day.net = newPrev + (day.morning || 0) + (day.evening || 0) - (day.expenses || 0);
+        }
+    }
+
     window.clearAccountDay = async function() {
-        if (!confirm('هل تريد تصفير بيانات هذا اليوم؟ سيتم وضع الصباحي والمسائي والمصاريف = صفر. الرصيد المُرحَّل سيظل كما هو.')) return;
+        if (!confirm('هل تريد تصفير بيانات هذا اليوم؟ سيتم وضع الصباحي والمسائي والمصاريف = صفر. الأيام اللي بعده هتتعدل.')) return;
 
         const prev = parseFloat(document.getElementById('accInputPrev').value) || 0;
 
@@ -1879,21 +1907,52 @@
         currentExpenseDetails = [];
         renderExpenseDetails();
 
+        // Recalculate subsequent days
+        await recalcSubsequentDays(currentAccountDate);
+
         saveAdminAccounts();
         await saveToFirebase();
         renderAccountDays();
         calculateAccountNet();
-        alert('✅ تم تصفير بيانات اليوم');
+        alert('✅ تم تصفير بيانات اليوم وإعادة حساب الأيام اللي بعده');
     };
 
     window.deleteAccountDay = async function() {
-        if (!confirm('⚠️ هل أنت متأكد من حذف هذا اليوم نهائياً؟ سيتم إزالة اليوم من السجل بالكامل وإعادة حساب المجاميع.')) return;
+        if (!confirm('⚠️ هل أنت متأكد من حذف هذا اليوم نهائياً؟ سيتم إزالة اليوم من السجل وإعادة حساب الأيام اللي بعده.')) return;
+
+        const deletedDate = currentAccountDate;
 
         // Remove from adminAccounts
-        adminAccounts = adminAccounts.filter(a => a.date !== currentAccountDate);
+        adminAccounts = adminAccounts.filter(a => a.date !== deletedDate);
 
         // Also remove expenses for this day from monthlyExpenses
-        monthlyExpenses = monthlyExpenses.filter(e => e.date !== currentAccountDate);
+        monthlyExpenses = monthlyExpenses.filter(e => e.date !== deletedDate);
+
+        // Recalculate subsequent days in the same month
+        const deletedD = new Date(deletedDate + 'T00:00:00');
+        const year = deletedD.getFullYear();
+        const month = deletedD.getMonth();
+
+        // Get remaining days in this month, sorted by date
+        const monthDays = adminAccounts
+            .filter(a => {
+                const d = new Date(a.date + 'T00:00:00');
+                return d.getFullYear() === year && d.getMonth() === month;
+            })
+            .sort((a, b) => new Date(a.date + 'T00:00:00') - new Date(b.date + 'T00:00:00'));
+
+        // Recalculate each day's previous balance and net
+        for (let i = 0; i < monthDays.length; i++) {
+            const day = monthDays[i];
+            // Find the previous recorded day (any date before this one)
+            const prevDays = adminAccounts
+                .filter(a => new Date(a.date + 'T00:00:00') < new Date(day.date + 'T00:00:00'))
+                .sort((a, b) => new Date(a.date + 'T00:00:00') - new Date(b.date + 'T00:00:00'));
+
+            const newPrev = prevDays.length > 0 ? prevDays[prevDays.length - 1].net : 0;
+            day.previous = newPrev;
+            day.net = newPrev + (day.morning || 0) + (day.evening || 0) - (day.expenses || 0);
+        }
 
         saveAdminAccounts();
         saveMonthlyExpenses();
@@ -1901,7 +1960,7 @@
 
         document.getElementById('accountDayForm').style.display = 'none';
         renderAccountDays();
-        alert('✅ تم حذف اليوم نهائياً');
+        alert('✅ تم حذف اليوم وإعادة حساب الأيام اللي بعده');
     };
 
     function renderAccountMonthlySummary(year, month) {
