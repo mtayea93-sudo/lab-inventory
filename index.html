@@ -421,7 +421,6 @@
         }
     </style>
 <base target="_blank">
-<base target="_blank">
 </head>
 <body>
 
@@ -691,9 +690,11 @@
                         <div id="expenseDetailsTable" style="margin-top: 15px;"></div>
                     </div>
 
-                    <div style="text-align: center; margin-top: 25px;">
+                    <div style="text-align: center; margin-top: 25px; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
                         <button class="btn-add" onclick="saveAccountDay()">💾 حفظ بيانات اليوم</button>
-                        <button onclick="closeAccountDayForm()" style="background: #999; color: white; border: none; padding: 12px 28px; border-radius: 12px; cursor: pointer; font-size: 15px; font-weight: 700; margin-right: 10px;">❌ إغلاق</button>
+                        <button onclick="clearAccountDay()" style="background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%); color: white; border: none; padding: 12px 28px; border-radius: 12px; cursor: pointer; font-size: 15px; font-weight: 700;">🧹 تصفير اليوم</button>
+                        <button onclick="deleteAccountDay()" style="background: linear-gradient(135deg, #c62828 0%, #b71c1c 100%); color: white; border: none; padding: 12px 28px; border-radius: 12px; cursor: pointer; font-size: 15px; font-weight: 700;">🗑️ حذف نهائي</button>
+                        <button onclick="closeAccountDayForm()" style="background: #999; color: white; border: none; padding: 12px 28px; border-radius: 12px; cursor: pointer; font-size: 15px; font-weight: 700;">❌ إغلاق</button>
                     </div>
                 </div>
 
@@ -1853,6 +1854,56 @@
         document.getElementById('accountDayForm').style.display = 'none';
     };
 
+    window.clearAccountDay = async function() {
+        if (!confirm('هل تريد تصفير بيانات هذا اليوم؟ سيتم وضع الصباحي والمسائي والمصاريف = صفر. الرصيد المُرحَّل سيظل كما هو.')) return;
+
+        const prev = parseFloat(document.getElementById('accInputPrev').value) || 0;
+
+        // Remove existing record
+        adminAccounts = adminAccounts.filter(a => a.date !== currentAccountDate);
+
+        // Save as zeroed record
+        adminAccounts.push({
+            date: currentAccountDate,
+            previous: prev,
+            morning: 0,
+            evening: 0,
+            expenses: 0,
+            net: prev,
+            expenseDetails: []
+        });
+
+        // Clear form inputs
+        document.getElementById('accInputMorning').value = '';
+        document.getElementById('accInputEvening').value = '';
+        currentExpenseDetails = [];
+        renderExpenseDetails();
+
+        saveAdminAccounts();
+        await saveToFirebase();
+        renderAccountDays();
+        calculateAccountNet();
+        alert('✅ تم تصفير بيانات اليوم');
+    };
+
+    window.deleteAccountDay = async function() {
+        if (!confirm('⚠️ هل أنت متأكد من حذف هذا اليوم نهائياً؟ سيتم إزالة اليوم من السجل بالكامل وإعادة حساب المجاميع.')) return;
+
+        // Remove from adminAccounts
+        adminAccounts = adminAccounts.filter(a => a.date !== currentAccountDate);
+
+        // Also remove expenses for this day from monthlyExpenses
+        monthlyExpenses = monthlyExpenses.filter(e => e.date !== currentAccountDate);
+
+        saveAdminAccounts();
+        saveMonthlyExpenses();
+        await saveToFirebase();
+
+        document.getElementById('accountDayForm').style.display = 'none';
+        renderAccountDays();
+        alert('✅ تم حذف اليوم نهائياً');
+    };
+
     function renderAccountMonthlySummary(year, month) {
         const monthRecords = adminAccounts.filter(a => {
             const d = new Date(a.date);
@@ -2414,13 +2465,16 @@
 
         saveDailyRecords();
 
-        // Save everything to Firebase (including dailyRecords)
+        // Save to Firebase (including dailyRecords)
         await saveToFirebase();
 
+        // Reset daily consumption
         consumption.forEach(c => {
             c.yesterday = c.daily;
             c.daily = 0;
         });
+
+        // Save again after reset
         await saveToFirebase();
         renderAll();
         alert('✅ تم حفظ استهلاك اليوم وبدء يوم جديد!');
