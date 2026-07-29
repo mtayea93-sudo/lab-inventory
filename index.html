@@ -815,6 +815,9 @@
                     <button class="btn-add" onclick="clearAllAccounts()" style="background: linear-gradient(135deg, #c62828 0%, #b71c1c 100%);">
                         🗑️ مسح جميع الحسابات
                     </button>
+                    <button class="btn-add" onclick="clearMonthlyExpenses()" style="background: linear-gradient(135deg, #7b1fa2 0%, #4a148c 100%);">
+                        🗑️ مسح سجل المصاريف الشهرية
+                    </button>
                 </div>
             </div>
         </div>
@@ -1601,17 +1604,28 @@
     let currentAccountMonth = new Date();
     const ACCOUNTS_KEEP_DAYS = 60;
     let currentExpenseDetails = []; // Array of {desc, amount, party}
+    let monthlyExpenses = []; // Separate monthly expense record: {id, year, month, date, desc, amount, party}
 
     function loadAdminAccounts() {
         try {
             const stored = localStorage.getItem('lab_admin_accounts');
             if (stored) adminAccounts = JSON.parse(stored);
         } catch (e) { adminAccounts = []; }
+        try {
+            const storedExp = localStorage.getItem('lab_monthly_expenses');
+            if (storedExp) monthlyExpenses = JSON.parse(storedExp);
+        } catch (e) { monthlyExpenses = []; }
     }
 
     function saveAdminAccounts() {
         try {
             localStorage.setItem('lab_admin_accounts', JSON.stringify(adminAccounts));
+        } catch (e) {}
+    }
+
+    function saveMonthlyExpenses() {
+        try {
+            localStorage.setItem('lab_monthly_expenses', JSON.stringify(monthlyExpenses));
         } catch (e) {}
     }
 
@@ -1641,7 +1655,8 @@
             const record = adminAccounts.find(a => a.date === dateStr);
             const hasData = !!record;
 
-            const hasExpenses = hasData && record.expenseDetails && record.expenseDetails.length > 0;
+            const dayExpenses = monthlyExpenses.filter(e => e.date === dateStr);
+            const hasExpenses = dayExpenses.length > 0;
             html += `
                 <button onclick="openAccountDay('${dateStr}')" style="
                     background: ${hasData ? 'linear-gradient(135deg, #4caf50 0%, #2e7d32 100%)' : 'linear-gradient(135deg, #1565C0 0%, #0d47a1 100%)'};
@@ -1665,7 +1680,7 @@
                 >
                     <span style="font-size: 20px;">${d}</span>
                     ${hasData ? `<span style="font-size: 11px; opacity: 0.9;">${record.net.toFixed(0)} ج.م</span>` : ''}
-                    ${hasExpenses ? `<span style="font-size: 9px; background: rgba(255,255,255,0.3); padding: 2px 6px; border-radius: 10px;">📝 ${record.expenseDetails.length} مصروف</span>` : ''}
+                    ${hasExpenses ? `<span style="font-size: 9px; background: rgba(255,255,255,0.3); padding: 2px 6px; border-radius: 10px;">📝 ${dayExpenses.length} مصروف</span>` : ''}
                 </button>
             `;
         }
@@ -2102,9 +2117,19 @@
         alert('✅ تم مسح جميع الحسابات بنجاح');
     };
 
+    window.clearMonthlyExpenses = function() {
+        if (!confirm('⚠️ هل أنت متأكد من مسح سجل المصاريف الشهرية؟ سيتم حذف جميع المصاريف المسجلة في السجل الشهري. لا يمكن التراجع عن هذا الإجراء!')) return;
+
+        monthlyExpenses = [];
+        saveMonthlyExpenses();
+        renderAccountDays();
+        alert('✅ تم مسح سجل المصاريف الشهرية بنجاح');
+    };
+
     window.exportData = function() {
         const data = {
             inventory, consumption, debts, orders, users,
+            adminAccounts, monthlyExpenses,
             exportDate: new Date().toISOString()
         };
         const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
@@ -2133,6 +2158,14 @@
                     if (data.users) {
                         users = data.users;
                         localStorage.setItem('lab_users', JSON.stringify(users));
+                    }
+                    if (data.adminAccounts) {
+                        adminAccounts = data.adminAccounts;
+                        saveAdminAccounts();
+                    }
+                    if (data.monthlyExpenses) {
+                        monthlyExpenses = data.monthlyExpenses;
+                        saveMonthlyExpenses();
                     }
                     await saveToFirebase();
                     renderAll();
