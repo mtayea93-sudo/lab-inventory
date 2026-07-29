@@ -421,6 +421,7 @@
         }
     </style>
 <base target="_blank">
+<base target="_blank">
 </head>
 <body>
 
@@ -1246,13 +1247,14 @@
         try {
             await db.collection("lab").doc("data").set({
                 inventory, consumption, debts, orders,
+                dailyRecords, adminAccounts, monthlyExpenses,
                 updatedAt: new Date().toISOString()
             });
             updateSyncStatus(true, "☁️ متزامن مع السحابة");
         } catch (e) {
             console.error("Firebase save error:", e);
             updateSyncStatus(false, "⚠️ غير متصل - محفوظ محلياً");
-            localStorage.setItem('lab_inv_backup', JSON.stringify({inventory, consumption, debts, orders}));
+            localStorage.setItem('lab_inv_backup', JSON.stringify({inventory, consumption, debts, orders, dailyRecords, adminAccounts, monthlyExpenses}));
         }
     }
 
@@ -1266,6 +1268,13 @@
                 consumption = data.consumption || [];
                 debts = data.debts || [];
                 orders = data.orders || [];
+                dailyRecords = data.dailyRecords || [];
+                adminAccounts = data.adminAccounts || [];
+                monthlyExpenses = data.monthlyExpenses || [];
+                // Also save to localStorage as backup
+                localStorage.setItem('lab_daily_records', JSON.stringify(dailyRecords));
+                localStorage.setItem('lab_admin_accounts', JSON.stringify(adminAccounts));
+                localStorage.setItem('lab_monthly_expenses', JSON.stringify(monthlyExpenses));
                 updateSyncStatus(true, "☁️ متصل بالسحابة");
                 if (document.getElementById('adminDashboard').style.display === 'block') {
                     renderAdminOverview();
@@ -1279,6 +1288,9 @@
                     consumption = data.consumption || [];
                     debts = data.debts || [];
                     orders = data.orders || [];
+                    dailyRecords = data.dailyRecords || [];
+                    adminAccounts = data.adminAccounts || [];
+                    monthlyExpenses = data.monthlyExpenses || [];
                     await saveToFirebase();
                 }
             }
@@ -1291,6 +1303,9 @@
                 consumption = data.consumption || [];
                 debts = data.debts || [];
                 orders = data.orders || [];
+                dailyRecords = data.dailyRecords || [];
+                adminAccounts = data.adminAccounts || [];
+                monthlyExpenses = data.monthlyExpenses || [];
             }
             updateSyncStatus(false, "⚠️ غير متصل - وضع عدم الاتصال");
         }
@@ -1310,6 +1325,13 @@
             consumption = data.consumption || [];
             debts = data.debts || [];
             orders = data.orders || [];
+            dailyRecords = data.dailyRecords || [];
+            adminAccounts = data.adminAccounts || [];
+            monthlyExpenses = data.monthlyExpenses || [];
+            // Sync to localStorage
+            localStorage.setItem('lab_daily_records', JSON.stringify(dailyRecords));
+            localStorage.setItem('lab_admin_accounts', JSON.stringify(adminAccounts));
+            localStorage.setItem('lab_monthly_expenses', JSON.stringify(monthlyExpenses));
             renderAll();
             if (document.getElementById('adminDashboard').style.display === 'block') {
                 renderAdminOverview();
@@ -1392,6 +1414,8 @@
             document.getElementById('adminDashboard').style.display = 'block';
             document.getElementById('adminErrorMsg').classList.remove('show');
             await loadFromFirebase();
+            loadDailyRecords();
+            loadAdminAccounts();
             renderAdminOverview();
             renderAdminInventory();
             renderAccountDays();
@@ -2187,6 +2211,7 @@
             document.getElementById('dashboard').style.display = 'block';
             document.getElementById('errorMsg').classList.remove('show');
             loadFromFirebase();
+            loadDailyRecords();
         } else {
             document.getElementById('errorMsg').classList.add('show');
             document.getElementById('password').value = '';
@@ -2389,15 +2414,8 @@
 
         saveDailyRecords();
 
-        try {
-            await db.collection("lab_history").doc(today).set({
-                items: historyItems,
-                date: today,
-                timestamp: new Date().toISOString()
-            });
-        } catch (e) {
-            console.error("[Save] Firebase backup failed:", e);
-        }
+        // Save everything to Firebase (including dailyRecords)
+        await saveToFirebase();
 
         consumption.forEach(c => {
             c.yesterday = c.daily;
