@@ -427,6 +427,7 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
+<base target="_blank">
 </head>
 <body>
 
@@ -3405,6 +3406,7 @@ function renderInwardReport() {
 
     function renderConsumptionMonthlyStats() {
         const container = document.getElementById('consumptionMonthlyStats');
+        const searchTerm = document.getElementById('consSearch') ? document.getElementById('consSearch').value.trim().toLowerCase() : '';
 
         let filtered = inventory;
         if (consFilter !== 'all') {
