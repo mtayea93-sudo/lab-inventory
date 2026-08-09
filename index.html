@@ -2054,7 +2054,7 @@
         container.innerHTML = html;
     }
 
-    window.saveAccountDay = function() {
+    window.saveAccountDay = async function() {
         const prev = parseFloat(document.getElementById('accInputPrev').value) || 0;
         const morning = parseFloat(document.getElementById('accInputMorning').value) || 0;
         const evening = parseFloat(document.getElementById('accInputEvening').value) || 0;
@@ -2099,10 +2099,10 @@
                 date: currentAccountDate,
                 note: 'سداد من المصاريف اليومية'
             });
-            saveToFirebase();
         }
 
         saveAdminAccounts();
+        await saveToFirebase();
         renderAccountDays();
         alert('✅ تم حفظ بيانات اليوم بنجاح' + (biourExpenses.length > 0 ? ' وتم تسجيل سداد بيور في المديونية' : ''));
     };
@@ -2991,11 +2991,12 @@ function renderInwardReport() {
         document.getElementById('confirmAdminPass').value = '';
     };
 
-    window.clearAllAccounts = function() {
+    window.clearAllAccounts = async function() {
         if (!confirm('⚠️ هل أنت متأكد من مسح جميع الحسابات؟ سيتم حذف جميع الحسابات اليومية والشهرية والسنوية. لا يمكن التراجع عن هذا الإجراء!')) return;
 
         adminAccounts = [];
         saveAdminAccounts();
+        await saveToFirebase();
         renderAccountDays();
         alert('✅ تم مسح جميع الحسابات بنجاح');
     };
@@ -3018,7 +3019,7 @@ function renderInwardReport() {
         alert('✅ تم تصدير البيانات بنجاح');
     };
 
-    window.importData = function(input) {
+    window.importData = async function(input) {
         const file = input.files[0];
         if (!file) return;
 
