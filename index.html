@@ -429,6 +429,7 @@
 
 <base target="_blank">
 <base target="_blank">
+<base target="_blank">
 </head>
 <body>
 
@@ -1666,6 +1667,23 @@
     };
 
     // ========== ADMIN OVERVIEW ==========
+    // حساب متوسط الاستهلاك اليومي من السجل التاريخي
+    function getAverageDailyConsumption(itemId) {
+        if (!dailyRecords || dailyRecords.length === 0) return 0;
+        let totalQty = 0;
+        let daysCount = 0;
+        dailyRecords.forEach(record => {
+            if (record.items && Array.isArray(record.items)) {
+                const item = record.items.find(it => it.name === inventory.find(inv => inv.id === itemId)?.name);
+                if (item && item.qty > 0) {
+                    totalQty += item.qty;
+                    daysCount++;
+                }
+            }
+        });
+        return daysCount > 0 ? totalQty / daysCount : 0;
+    }
+
     function renderAdminOverview() {
         document.getElementById('adminTotalItems').textContent = inventory.length;
 
@@ -1681,8 +1699,7 @@
 
         let lowStock = 0;
         inventory.forEach(item => {
-            const c = consumption.find(con => con.itemId === item.id);
-            const daily = c ? (c.daily || 0) : 0;
+            const daily = getAverageDailyConsumption(item.id);
             const daysLeft = daily > 0 ? Math.floor(item.qty / daily) : 999;
             if (daysLeft < 7) lowStock++;
         });
@@ -1706,8 +1723,7 @@
 
         const lowStockItems = [];
         inventory.forEach(item => {
-            const c = consumption.find(con => con.itemId === item.id);
-            const daily = c ? (c.daily || 0) : 0;
+            const daily = getAverageDailyConsumption(item.id);
             const daysLeft = daily > 0 ? Math.floor(item.qty / daily) : 999;
             if (daysLeft < 7) {
                 lowStockItems.push({...item, daysLeft, daily});
@@ -2590,7 +2606,7 @@
         let currentTotal = 0;
 
         filtered.forEach(item => {
-            const c = consumption.find(con => con.itemId === item.id);
+            const c = dailyConsumption.find(con => con.itemId === item.id);
             const daily = c ? Math.max(c.daily || 0, c.yesterday || 0) : 0;
             const monthlyNeed = daily * 30;
             const orderQty = Math.max(0, Math.ceil(monthlyNeed - item.qty));
@@ -2764,7 +2780,7 @@
         // Calculate order from current consumption
         let orderItems = [];
         inventory.forEach(item => {
-            const c = consumption.find(con => con.itemId === item.id);
+            const c = dailyConsumption.find(con => con.itemId === item.id);
             const daily = c ? Math.max(c.daily || 0, c.yesterday || 0) : 0;
             const monthlyNeed = daily * 30;
             const orderQty = Math.max(0, Math.ceil(monthlyNeed - item.qty));
@@ -2868,7 +2884,7 @@ function renderInwardReport() {
         let totalMonthlyCost = 0;
 
         inventory.forEach((item, idx) => {
-            const c = consumption.find(con => con.itemId === item.id);
+            const c = dailyConsumption.find(con => con.itemId === item.id);
             const daily = c ? (c.daily || 0) : 0;
             const monthly = daily * 30;
             const monthlyCost = monthly * item.price;
@@ -3242,6 +3258,8 @@ function renderInwardReport() {
                     qty: qty,
                     cost: cost
                 });
+                // خصم الاستهلاك من المخزون
+                item.qty = Math.max(0, item.qty - qty);
             }
         });
 
@@ -3326,7 +3344,7 @@ function renderInwardReport() {
             </tr></thead><tbody>`;
 
         filtered.forEach(item => {
-            const c = consumption.find(con => con.itemId === item.id);
+            const c = dailyConsumption.find(con => con.itemId === item.id);
             const yesterday = c ? (c.yesterday || 0) : 0;
             const daily = c ? c.daily : 0;
 
@@ -3441,7 +3459,7 @@ function renderInwardReport() {
             </tr></thead><tbody>`;
 
         filtered.forEach(item => {
-            const c = consumption.find(con => con.itemId === item.id);
+            const c = dailyConsumption.find(con => con.itemId === item.id);
             const daily = c ? (c.daily || 0) : 0;
             const monthly = daily * 30;
             const remaining = item.qty - monthly;
@@ -3492,8 +3510,7 @@ function renderInwardReport() {
         let totalValue = 0;
 
         filtered.forEach(item => {
-            const c = consumption.find(con => con.itemId === item.id);
-            const daily = c ? Math.max(c.daily || 0, c.yesterday || 0) : 0;
+            const daily = getAverageDailyConsumption(item.id);
             const monthlyNeed = daily * 30;
             const orderQty = Math.max(0, Math.ceil(monthlyNeed - item.qty));
             if (orderQty > 0) {
