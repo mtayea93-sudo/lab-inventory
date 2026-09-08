@@ -469,6 +469,7 @@
 <base target="_blank">
 <base target="_blank">
 <base target="_blank">
+<base target="_blank">
 </head>
 <body>
 
@@ -4284,7 +4285,12 @@ function syncLabBalanceToFinance() {
 }
 
 function initWareed() {
-    document.getElementById('dayDate').valueAsDate = new Date();
+    const d = new Date();
+    const el = document.getElementById('dayDate');
+    try { el.valueAsDate = d; } catch (e) {}
+    if (!el.value) {
+        el.value = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+    }
     loadDayData();
     renderMonthlyTable();
     loadWareedFromFirebase();
@@ -4327,7 +4333,12 @@ async function loadWareedFromFirebase() {
         const docSnap = await db.collection("lab").doc("wareed").get();
         if (docSnap.exists) {
             const remote = docSnap.data().data || {};
-            localStorage.setItem('wareedData', JSON.stringify(remote));
+            const local = wareedGetData();
+            if (Object.keys(remote).length === 0 && Object.keys(local).length > 0) {
+                await saveWareedToFirebase(); // السحابة فاضية والمحلي فيه بيانات → ارفع المحلي
+            } else if (Object.keys(remote).length > 0) {
+                localStorage.setItem('wareedData', JSON.stringify(remote));
+            }
             updateSyncStatus(true, "☁️ متصل بالسحابة");
         } else {
             await saveWareedToFirebase(); // أول مرة: ارفع البيانات المحلية
@@ -4345,7 +4356,12 @@ try {
     db.collection("lab").doc("wareed").onSnapshot((docSnap) => {
         if (!docSnap.exists) return;
         const remote = docSnap.data().data || {};
-        if (JSON.stringify(remote) !== JSON.stringify(wareedGetData())) {
+        const local = wareedGetData();
+        if (Object.keys(remote).length === 0 && Object.keys(local).length > 0) {
+            saveWareedToFirebase(); // السحابة فاضية والمحلي فيه بيانات → ارفع المحلي بدل المسح
+            return;
+        }
+        if (JSON.stringify(remote) !== JSON.stringify(local)) {
             localStorage.setItem('wareedData', JSON.stringify(remote));
             if (window._wareedInit) { loadDayData(); renderMonthlyTable(); }
             updateSyncStatus(true, "☁️ متزامن تلقائياً");
@@ -4433,12 +4449,14 @@ function calcBasem() {
 }
 
 function calcNonBasem() {
+    const patM = parseFloat(document.getElementById('l-labpat-m').value) || 0;
+    const patE = parseFloat(document.getElementById('l-labpat-e').value) || 0;
     const extM = parseFloat(document.getElementById('l-ext-m').value) || 0;
     const extE = parseFloat(document.getElementById('l-ext-e').value) || 0;
     const basemM = parseFloat(document.getElementById('basem-in-m').value) || 0;
     const basemE = parseFloat(document.getElementById('basem-in-e').value) || 0;
-    const nonM = basemM - extM;
-    const nonE = basemE - extE;
+    const nonM = (patM + extM) - basemM;
+    const nonE = (patE + extE) - basemE;
     document.getElementById('nonbasem-m').value = nonM;
     document.getElementById('nonbasem-e').value = nonE;
     document.getElementById('nonbasem-total').value = nonM + nonE;
@@ -4640,6 +4658,25 @@ function renderMonthlyTable() {
 
 function printWareed() { window.print(); }
 
+
+// ========== نقل تلقائي: «بيان وارد ومصروف» → «الحسابات اليومية» ==========
+// (يفتح نفس اليوم في الحسابات → يعبّئ الصباحي والمسائي تلقائياً من مجموع بيان الوارد)
+(function() {
+    const _origOpenAccountDay = window.openAccountDay;
+    if (typeof _origOpenAccountDay !== 'function') return;
+    window.openAccountDay = function(dateStr) {
+        _origOpenAccountDay(dateStr);
+        try {
+            const day = wareedGetData()[dateStr];
+            if (!day) return;
+            const morning = (parseFloat(day.patient && day.patient.morning) || 0) + (parseFloat(day.lab && day.lab.morning) || 0);
+            const evening = (parseFloat(day.patient && day.patient.evening) || 0) + (parseFloat(day.lab && day.lab.evening) || 0);
+            document.getElementById('accInputMorning').value = morning;
+            document.getElementById('accInputEvening').value = evening;
+            calculateAccountNet();
+        } catch (e) { console.error('Wareed->Accounts auto-fill error:', e); }
+    };
+})();
 </script>
 </body>
 </html>
