@@ -419,6 +419,45 @@
             .category-filters { justify-content: center; }
             .cat-filter-btn { padding: 8px 16px; font-size: 13px; }
         }
+/* ============================================================
+   وحدة «بيان وارد ومصروف» — مضافة من ملف معدل_استهلاك_واحتياج_المعمل
+   (كل القواعد محصورة تحت #wareedTab حتى لا تؤثر على باقي الموقع)
+   ============================================================ */
+#wareedTab { display: none; }
+#wareedTab.active { display: block; }
+#wareedTab .content-card { background: #f0f7ff; border-radius: 24px; padding: 30px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); margin-bottom: 20px; }
+#wareedTab .input-group input[readonly] { background: #f5f5f5; color: #333; font-weight: 700; }
+#wareedTab .btn-add { background: linear-gradient(135deg, #1565C0 0%, #FF9800 100%); color: white; border: none; padding: 12px 28px; border-radius: 12px; cursor: pointer; font-size: 15px; font-weight: 700; transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; }
+#wareedTab .data-table input { width: 100%; padding: 8px 10px; border: 1px solid #ddd; border-radius: 6px; text-align: center; font-size: 14px; }
+#wareedTab .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 15px; margin-bottom: 25px; }
+#wareedTab .stat-box .number { font-size: 26px; font-weight: 800; margin-bottom: 5px; }
+#wareedTab .section-title { background: linear-gradient(135deg, #1565C0 0%, #FF9800 100%); color: white; padding: 14px 24px; border-radius: 16px; font-size: 18px; font-weight: 700; margin: 25px 0 20px; display: flex; align-items: center; gap: 10px; }
+#wareedTab .two-col-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 25px; margin-bottom: 20px; }
+#wareedTab .sub-card { background: white; border-radius: 16px; padding: 25px; border: 2px solid #e3f0ff; }
+#wareedTab .sub-card h3 { color: #1565C0; font-size: 18px; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid #e3f0ff; display: flex; align-items: center; gap: 8px; }
+#wareedTab .sub-card h4 { color: #333; font-size: 15px; margin: 15px 0 10px; padding-right: 12px; border-right: 4px solid #FF9800; }
+#wareedTab .print-btn { background: #2e7d32; color: white; border: none; padding: 12px 28px; border-radius: 12px; cursor: pointer; font-size: 15px; font-weight: 700; display: inline-flex; align-items: center; gap: 8px; margin: 10px 5px; transition: all 0.2s; }
+#wareedTab .print-btn:hover { background: #1b5e20; transform: translateY(-2px); }
+#wareedTab .mini-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; }
+#wareedTab .mini-table th { background: #f0f7ff; padding: 10px; text-align: center; font-weight: 700; border: 1px solid #ddd; }
+#wareedTab .mini-table td { padding: 10px; border: 1px solid #eee; text-align: center; }
+#wareedTab .mini-table input { width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 6px; text-align: center; font-size: 13px; }
+#wareedTab .expense-items { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; }
+#wareedTab .btn-edit { background: #1565C0; color: white; border: none; padding: 6px 14px; border-radius: 8px; cursor: pointer; font-size: 12px; margin-left: 5px; }
+@media (max-width: 900px) {
+    #wareedTab .two-col-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 768px) {
+    #wareedTab .expense-items { grid-template-columns: 1fr 1fr; }
+}
+@media print {
+    body { background: #fff !important; }
+    body * { visibility: hidden; }
+    #wareedTab, #wareedTab * { visibility: visible; }
+    #wareedTab { position: absolute; top: 0; left: 0; width: 100%; }
+    #wareedTab .btn-add, #wareedTab .print-btn, #wareedTab .btn-edit, #wareedTab .btn-delete { display: none !important; }
+    #wareedTab .content-card { box-shadow: none !important; page-break-inside: avoid; }
+}
     </style>
 <base target="_blank">
     <!-- jsPDF for PDF export -->
@@ -1010,6 +1049,7 @@
             <button class="nav-tab" onclick="showTab('dailyStatement', this)">📋 بيان الاستهلاك اليومي</button>
             <button class="nav-tab" onclick="showTab('monthlyStats', this)">📈 الإحصائيات الشهرية</button>
             <button class="nav-tab" onclick="showTab('orders', this)">🛒 الطلبيات</button>
+            <button class="nav-tab" onclick="openWareedTab(this)">📊 بيان وارد ومصروف</button>
         </div>
 
     </div>
@@ -1311,6 +1351,212 @@
             </div>
         </div>
 
+
+<div class="tab-content" id="wareedTab">
+            <div class="content-card">
+                <h2>📊 بيان وارد ومصروف</h2>
+                <div class="hint-box">
+                    💡 "المصاريف والخصم" = مجموع كل المصاريف التفصيلية + مجموع خصومات البيشنت. مصاريف اللاب = مجموع التفاصيل الإضافية تلقائياً.
+                </div>
+
+                <!-- Day selector -->
+                <div class="input-row" style="align-items:flex-end;">
+                    <div class="input-group" style="min-width:200px;">
+                        <label>📅 تاريخ اليوم</label>
+                        <input type="date" id="dayDate" onchange="loadDayData()">
+                    </div>
+                    <button class="btn-add" onclick="saveCurrentDay()">💾 حفظ بيانات اليوم</button>
+                    <button class="print-btn" onclick="printWareed()">🖨️ طباعة</button>
+                </div>
+
+                <!-- Stats -->
+                <div class="stats-grid">
+                    <div class="stat-box"><div class="number" id="d-patient-total">0</div><div class="label">إجمالي البيشنت</div></div>
+                    <div class="stat-box"><div class="number" id="d-lab-total">0</div><div class="label">إجمالي اللاب</div></div>
+                    <div class="stat-box"><div class="number" id="d-expense-total">0</div><div class="label">مصاريف+خصم</div></div>
+                    <div class="stat-box"><div class="number" id="d-discount-total">0</div><div class="label">إجمالي الخصومات</div></div>
+                    <div class="stat-box"><div class="number" id="d-balance-total">0</div><div class="label">الباقي الكلي</div></div>
+                </div>
+
+                <!-- TWO BRANCHES -->
+                <div class="two-col-grid">
+                    <!-- PATIENT BRANCH -->
+                    <div class="sub-card">
+                        <h3>🧑‍⚕️ بيان مصاريف البيشنت</h3>
+                        <div class="input-row">
+                            <div class="input-group"><label>صباحي</label><input type="number" id="p-morning" value="0" oninput="calcPatient()"></div>
+                            <div class="input-group"><label>مسائي</label><input type="number" id="p-evening" value="0" oninput="calcPatient()"></div>
+                            <div class="input-group"><label>الإجمالي</label><input type="number" id="p-total" value="0" readonly></div>
+                        </div>
+                        <div class="input-row">
+                            <div class="input-group"><label>المصاريف والخصم (تلقائي)</label><input type="number" id="p-expense" value="0" readonly style="background:#fff3e0;"></div>
+                            <div class="input-group"><label>الباقي</label><input type="number" id="p-balance" value="0" readonly style="color:#2e7d32; font-weight:800;"></div>
+                        </div>
+
+                        <h4>✂️ خصومات البيشنت</h4>
+                        <div class="input-row">
+                            <div class="input-group" style="flex:2"><label>اسم الحالة</label><input type="text" id="disc-name" placeholder="اسم المريض"></div>
+                            <div class="input-group"><label>الخصم</label><input type="number" id="disc-amount" placeholder="0"></div>
+                            <div class="input-group" style="flex:2"><label>السبب</label><input type="text" id="disc-reason" placeholder="سبب الخصم"></div>
+                            <button class="btn-add" onclick="addDiscount()">➕ إضافة</button>
+                        </div>
+                        <table class="data-table" id="discountTable">
+                            <thead><tr><th>اسم الحالة</th><th>الخصم</th><th>السبب</th><th>حذف</th></tr></thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+
+                    <!-- LAB BRANCH -->
+                    <div class="sub-card">
+                        <h3>🔬 بيان مصاريف اللاب</h3>
+                        <input type="hidden" id="l-morning" value="0">
+                        <input type="hidden" id="l-evening" value="0">
+
+                        <h4>🔬 لاب بيشنت & خارجي</h4>
+                        <div class="input-row">
+                            <div class="input-group"><label>لاب بيشنت - صباحي</label><input type="number" id="l-labpat-m" value="0" readonly style="background:#e3f2fd;"></div>
+                            <div class="input-group"><label>لاب بيشنت - مسائي</label><input type="number" id="l-labpat-e" value="0" readonly style="background:#e3f2fd;"></div>
+                            <div class="input-group"><label>لاب خارجي - صباحي</label><input type="number" id="l-ext-m" value="0" oninput="syncLabExtMorning()"></div>
+                            <div class="input-group"><label>لاب خارجي - مسائي</label><input type="number" id="l-ext-e" value="0" oninput="syncLabExtEvening()"></div>
+                        </div>
+
+                        <div class="input-row">
+                            <div class="input-group"><label>الإجمالي</label><input type="number" id="l-total" value="0" readonly></div>
+                            <div class="input-group"><label>المصاريف (تلقائي من التفاصيل)</label><input type="number" id="l-expense" value="0" readonly style="background:#fff3e0;"></div>
+                            <div class="input-group"><label>الباقي</label><input type="number" id="l-balance" value="0" readonly style="color:#2e7d32; font-weight:800;"></div>
+                        </div>
+
+                        <h4>📋 تفاصيل إضافية</h4>
+                        <div class="input-row">
+                            <div class="input-group"><label>القمة - صباحي</label><input type="number" id="l-peak-m" value="0" oninput="calcLabDetails()"></div>
+                            <div class="input-group"><label>القمة - مسائي</label><input type="number" id="l-peak-e" value="0" oninput="calcLabDetails()"></div>
+                            <div class="input-group"><label>باسم - صباحي</label><input type="number" id="l-basem-m" value="0" oninput="calcLabDetails()"></div>
+                            <div class="input-group"><label>باسم - مسائي</label><input type="number" id="l-basem-e" value="0" oninput="calcLabDetails()"></div>
+                        </div>
+                        <div class="input-row">
+                            <div class="input-group"><label>باثولوجي</label><input type="number" id="l-path" value="0" oninput="calcLabDetails()"></div>
+                            <div class="input-group"><label>أخرى</label><input type="number" id="l-other" value="0" oninput="calcLabDetails()"></div>
+                        </div>
+
+                        <h4>📊 حساب باسم (النسبة 8% تلقائي)</h4>
+                        <table class="mini-table">
+                            <thead><tr><th></th><th>صباحي</th><th>مسائي</th><th>الإجمالي</th><th>النسبة (8%)</th><th>الباقي</th></tr></thead>
+                            <tbody>
+                                <tr>
+                                    <td style="font-weight:700">داخل</td>
+                                    <td><input type="number" id="basem-in-m" value="0" oninput="syncBasemMorning()"></td>
+                                    <td><input type="number" id="basem-in-e" value="0" oninput="syncBasemEvening()"></td>
+                                    <td><input type="number" id="basem-in-total" value="0" readonly></td>
+                                    <td><input type="number" id="basem-ratio" value="0" readonly style="background:#e3f2fd;"></td>
+                                    <td><input type="number" id="basem-balance" value="0" readonly style="color:#2e7d32; font-weight:700;"></td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <h4>📈 الوارد من غير باسم (تلقائي = اللاب - داخل باسم)</h4>
+                        <div class="input-row">
+                            <div class="input-group"><label>صباحي</label><input type="number" id="nonbasem-m" value="0" readonly style="background:#e8f5e9;"></div>
+                            <div class="input-group"><label>مسائي</label><input type="number" id="nonbasem-e" value="0" readonly style="background:#e8f5e9;"></div>
+                            <div class="input-group"><label>الإجمالي</label><input type="number" id="nonbasem-total" value="0" readonly style="background:#e8f5e9; font-weight:700;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- EXPENSES DETAIL -->
+                <div class="section-title">📋 بيان المصاريف التفصيلي</div>
+                <div class="sub-card">
+                    <div class="sub-card" style="border:none; padding:0;">
+                        <h4>🧴 مسلتزمات</h4>
+                        <div class="expense-items">
+                            <div class="input-group"><label>مناديل</label><input type="number" id="e-tissues" value="0" oninput="calcExpenses()"></div>
+                            <div class="input-group"><label>جوانتي</label><input type="number" id="e-gloves" value="0" oninput="calcExpenses()"></div>
+                            <div class="input-group"><label>قطن</label><input type="number" id="e-cotton" value="0" oninput="calcExpenses()"></div>
+                            <div class="input-group"><label>سرنجات</label><input type="number" id="e-syringes" value="0" oninput="calcExpenses()"></div>
+                        </div>
+                    </div>
+                    <div class="sub-card" style="border:none; padding:0; margin-top:15px;">
+                        <h4>🖊️ مكتبة</h4>
+                        <div class="expense-items">
+                            <div class="input-group"><label>أقلام</label><input type="number" id="e-pens" value="0" oninput="calcExpenses()"></div>
+                            <div class="input-group"><label>دبابيس</label><input type="number" id="e-pins" value="0" oninput="calcExpenses()"></div>
+                            <div class="input-group"><label>اساتيك</label><input type="number" id="e-sticks" value="0" oninput="calcExpenses()"></div>
+                        </div>
+                    </div>
+                    <div class="sub-card" style="border:none; padding:0; margin-top:15px;">
+                        <h4>💊 صيدلية</h4>
+                        <div class="expense-items">
+                            <div class="input-group"><label>محلول ملح</label><input type="number" id="e-saline" value="0" oninput="calcExpenses()"></div>
+                            <div class="input-group"><label>مياه حقن</label><input type="number" id="e-water" value="0" oninput="calcExpenses()"></div>
+                            <div class="input-group"><label>سرنجات انسولين</label><input type="number" id="e-insulin" value="0" oninput="calcExpenses()"></div>
+                            <div class="input-group"><label>هيبارين</label><input type="number" id="e-heparin" value="0" oninput="calcExpenses()"></div>
+                        </div>
+                    </div>
+                    <div class="sub-card" style="border:none; padding:0; margin-top:15px;">
+                        <h4>🔥 محرقة</h4>
+                        <div class="expense-items">
+                            <div class="input-group"><label>أكياس</label><input type="number" id="e-bags" value="0" oninput="calcExpenses()"></div>
+                            <div class="input-group"><label>محرقة</label><input type="number" id="e-incinerator" value="0" oninput="calcExpenses()"></div>
+                        </div>
+                    </div>
+                    <div class="sub-card" style="border:none; padding:0; margin-top:15px;">
+                        <h4>☕ بوفيه</h4>
+                        <div class="expense-items">
+                            <div class="input-group"><label>سكر</label><input type="number" id="e-sugar" value="0" oninput="calcExpenses()"></div>
+                            <div class="input-group"><label>شاي</label><input type="number" id="e-tea" value="0" oninput="calcExpenses()"></div>
+                            <div class="input-group"><label>قهوة</label><input type="number" id="e-coffee" value="0" oninput="calcExpenses()"></div>
+                            <div class="input-group"><label>أكل</label><input type="number" id="e-food" value="0" oninput="calcExpenses()"></div>
+                        </div>
+                    </div>
+                    <div class="sub-card" style="border:none; padding:0; margin-top:15px;">
+                        <h4>👨‍⚕️ د.محمد & أخرى</h4>
+                        <div class="expense-items">
+                            <div class="input-group"><label>د.محمد</label><input type="number" id="e-doctor" value="0" oninput="calcExpenses()"></div>
+                            <div class="input-group"><label>أخرى</label><input type="number" id="e-other" value="0" oninput="calcExpenses()"></div>
+                        </div>
+                    </div>
+                    <div class="sub-card" style="border:none; padding:0; margin-top:15px;">
+                        <h4>🔬 لاب (صباحي/مسائي)</h4>
+                        <div class="expense-items">
+                            <div class="input-group"><label>لاب - صباحي</label><input type="number" id="e-lab-m" value="0" oninput="calcExpenses()"></div>
+                            <div class="input-group"><label>لاب - مسائي</label><input type="number" id="e-lab-e" value="0" oninput="calcExpenses()"></div>
+                            <div class="input-group"><label>لاب - إجمالي</label><input type="number" id="e-lab-total" value="0" readonly></div>
+                        </div>
+                    </div>
+                    <div style="margin-top: 20px; padding: 15px; background: #e8f5e9; border-radius: 12px; text-align: center;">
+                        <span style="font-size: 18px; font-weight: 700; color: #2e7d32;">
+                            إجمالي المصاريف التفصيلية: <span id="expenseGrandTotal">0</span> ج.م
+                        </span>
+                    </div>
+                </div>
+
+                <!-- MONTHLY SUMMARY -->
+                <div class="section-title">📅 ملخص الشهر</div>
+                <div class="sub-card">
+                    <table class="data-table" id="monthlyTable">
+                        <thead>
+                            <tr>
+                                <th>اليوم</th>
+                                <th>بيشنت صباحي</th>
+                                <th>بيشنت مسائي</th>
+                                <th>بيشنت إجمالي</th>
+                                <th>لاب صباحي</th>
+                                <th>لاب مسائي</th>
+                                <th>لاب إجمالي</th>
+                                <th>مصاريف+خصم</th>
+                                <th>خصومات</th>
+                                <th>باقي</th>
+                                <th>إجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="monthlyBody"></tbody>
+                    </table>
+                    <div id="monthlyEmpty" class="empty-state" style="display:none;">
+                        <div class="icon">📭</div>
+                        <p>لا توجد بيانات مسجلة بعد. اختر تاريخ وحفظ اليوم.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -4021,6 +4267,379 @@
 
     // ========== AUTO CLEANUP (runs on load) ==========
     loadDailyRecords();
+</script>
+
+<script>
+// ============================================================
+// ===== وحدة «بيان وارد ومصروف» — مضافة من ملف معدل_استهلاك_واحتياج_المعمل =====
+// ============================================================
+let currentDiscounts = [];
+const expenseFields = ['e-tissues','e-gloves','e-cotton','e-syringes','e-pens','e-pins','e-sticks','e-saline','e-water','e-insulin','e-heparin','e-bags','e-incinerator','e-sugar','e-tea','e-coffee','e-food','e-doctor','e-other','e-lab-m','e-lab-e'];
+
+function syncLabBalanceToFinance() {
+    const finInput = document.getElementById('input-lab-balance');
+    if (!finInput) return; // تبويب المديونية القديم غير موجود في هذا الملف
+    const labBal = parseFloat(document.getElementById('l-balance').value) || 0;
+    finInput.value = labBal;
+}
+
+function initWareed() {
+    document.getElementById('dayDate').valueAsDate = new Date();
+    loadDayData();
+    renderMonthlyTable();
+    loadWareedFromFirebase();
+}
+
+function openWareedTab(btn) {
+    showTab('wareed', btn);
+    if (!window._wareedInit) {
+        window._wareedInit = true;
+        initWareed();
+    } else {
+        renderMonthlyTable();
+    }
+}
+
+function wareedGetData() { return JSON.parse(localStorage.getItem('wareedData') || '{}'); }
+
+function wareedSetData(data) {
+    localStorage.setItem('wareedData', JSON.stringify(data));
+    clearTimeout(window._wareedSaveTimer);
+    window._wareedSaveTimer = setTimeout(saveWareedToFirebase, 800);
+}
+
+// ========== FIREBASE SYNC (بنفس نظام الموقع الأصلي) ==========
+async function saveWareedToFirebase() {
+    try {
+        await db.collection("lab").doc("wareed").set({
+            data: wareedGetData(),
+            updatedAt: new Date().toISOString()
+        });
+        updateSyncStatus(true, "☁️ متزامن مع السحابة");
+    } catch (e) {
+        console.error("Wareed Firebase save error:", e);
+        updateSyncStatus(false, "⚠️ غير متصل - محفوظ محلياً");
+    }
+}
+
+async function loadWareedFromFirebase() {
+    try {
+        const docSnap = await db.collection("lab").doc("wareed").get();
+        if (docSnap.exists) {
+            const remote = docSnap.data().data || {};
+            localStorage.setItem('wareedData', JSON.stringify(remote));
+            updateSyncStatus(true, "☁️ متصل بالسحابة");
+        } else {
+            await saveWareedToFirebase(); // أول مرة: ارفع البيانات المحلية
+        }
+    } catch (e) {
+        console.error("Wareed Firebase load error:", e);
+        updateSyncStatus(false, "⚠️ غير متصل - وضع عدم الاتصال");
+    }
+    loadDayData();
+    renderMonthlyTable();
+}
+
+// مزامنة لحظية لما البيانات تتغير من جهاز تاني
+try {
+    db.collection("lab").doc("wareed").onSnapshot((docSnap) => {
+        if (!docSnap.exists) return;
+        const remote = docSnap.data().data || {};
+        if (JSON.stringify(remote) !== JSON.stringify(wareedGetData())) {
+            localStorage.setItem('wareedData', JSON.stringify(remote));
+            if (window._wareedInit) { loadDayData(); renderMonthlyTable(); }
+            updateSyncStatus(true, "☁️ متزامن تلقائياً");
+        }
+    });
+} catch (e) { console.error("Wareed listener error:", e); }
+
+// ===== FINANCE TAB (MODIFIED: single total + lab balance sync) =====
+
+function calcPatient() {
+    const m = parseFloat(document.getElementById('p-morning').value) || 0;
+    const e = parseFloat(document.getElementById('p-evening').value) || 0;
+    const total = m + e;
+    document.getElementById('p-total').value = total;
+    updateCombinedExpense();
+}
+
+function syncLabExtMorning() {
+    calcLab();
+    calcNonBasem();
+}
+
+function syncLabExtEvening() {
+    calcLab();
+    calcNonBasem();
+}
+
+function calcLabDetails() {
+    const peakM = parseFloat(document.getElementById('l-peak-m').value) || 0;
+    const peakE = parseFloat(document.getElementById('l-peak-e').value) || 0;
+    const basemM = parseFloat(document.getElementById('l-basem-m').value) || 0;
+    const basemE = parseFloat(document.getElementById('l-basem-e').value) || 0;
+    const path = parseFloat(document.getElementById('l-path').value) || 0;
+    const other = parseFloat(document.getElementById('l-other').value) || 0;
+    const totalExpense = peakM + peakE + basemM + basemE + path + other;
+    document.getElementById('l-expense').value = totalExpense;
+    calcLab();
+    calcBasem();
+}
+
+function calcLab() {
+    const m = parseFloat(document.getElementById('l-morning').value) || 0;
+    const e = parseFloat(document.getElementById('l-evening').value) || 0;
+    const exp = parseFloat(document.getElementById('l-expense').value) || 0;
+    // ربط "لاب بيشنت" تلقائياً بـ e-lab-m / e-lab-e من المصاريف الفصلية
+    const labPatM = parseFloat(document.getElementById('e-lab-m').value) || 0;
+    const labPatE = parseFloat(document.getElementById('e-lab-e').value) || 0;
+    document.getElementById('l-labpat-m').value = labPatM;
+    document.getElementById('l-labpat-e').value = labPatE;
+    const extM = parseFloat(document.getElementById('l-ext-m').value) || 0;
+    const extE = parseFloat(document.getElementById('l-ext-e').value) || 0;
+    const total = labPatM + labPatE + extM + extE;
+    document.getElementById('l-total').value = total;
+    document.getElementById('l-balance').value = total - exp;
+    calcNonBasem();
+    updateDayStats();
+    syncLabBalanceToFinance();
+}
+
+function syncBasemMorning() {
+    const val = parseFloat(document.getElementById('basem-in-m').value) || 0;
+    document.getElementById('l-basem-m').value = Math.round(val * 0.08);
+    calcLabDetails();
+}
+
+function syncBasemEvening() {
+    const val = parseFloat(document.getElementById('basem-in-e').value) || 0;
+    document.getElementById('l-basem-e').value = Math.round(val * 0.08);
+    calcLabDetails();
+}
+
+function calcBasem() {
+    const m = parseFloat(document.getElementById('basem-in-m').value) || 0;
+    const e = parseFloat(document.getElementById('basem-in-e').value) || 0;
+    const total = m + e;
+    const ratioM = m * 0.08;
+    const ratioE = e * 0.08;
+    const ratioTotal = ratioM + ratioE;
+    document.getElementById('basem-in-total').value = total;
+    document.getElementById('basem-ratio').value = Math.round(ratioTotal);
+    document.getElementById('basem-balance').value = Math.round(total - ratioTotal);
+    document.getElementById('l-basem-m').value = Math.round(ratioM);
+    document.getElementById('l-basem-e').value = Math.round(ratioE);
+    calcNonBasem();
+}
+
+function calcNonBasem() {
+    const extM = parseFloat(document.getElementById('l-ext-m').value) || 0;
+    const extE = parseFloat(document.getElementById('l-ext-e').value) || 0;
+    const basemM = parseFloat(document.getElementById('basem-in-m').value) || 0;
+    const basemE = parseFloat(document.getElementById('basem-in-e').value) || 0;
+    const nonM = basemM - extM;
+    const nonE = basemE - extE;
+    document.getElementById('nonbasem-m').value = nonM;
+    document.getElementById('nonbasem-e').value = nonE;
+    document.getElementById('nonbasem-total').value = nonM + nonE;
+}
+
+function calcExpenses() {
+    let sum = 0;
+    expenseFields.forEach(id => { sum += parseFloat(document.getElementById(id).value) || 0; });
+    const labM = parseFloat(document.getElementById('e-lab-m').value) || 0;
+    const labE = parseFloat(document.getElementById('e-lab-e').value) || 0;
+    document.getElementById('e-lab-total').value = labM + labE;
+    document.getElementById('expenseGrandTotal').textContent = sum.toLocaleString();
+    updateCombinedExpense();
+    calcLab();
+}
+
+function updateCombinedExpense() {
+    let sumExpenses = 0;
+    expenseFields.forEach(id => { sumExpenses += parseFloat(document.getElementById(id).value) || 0; });
+    let sumDiscounts = currentDiscounts.reduce((a, b) => a + (parseFloat(b.amount) || 0), 0);
+    let combined = sumExpenses + sumDiscounts;
+    document.getElementById('p-expense').value = combined;
+    const pTotal = parseFloat(document.getElementById('p-total').value) || 0;
+    document.getElementById('p-balance').value = pTotal - combined;
+    updateDayStats();
+}
+
+function updateDayStats() {
+    const pTotal = parseFloat(document.getElementById('p-total').value) || 0;
+    const lTotal = parseFloat(document.getElementById('l-total').value) || 0;
+    const pExpense = parseFloat(document.getElementById('p-expense').value) || 0;
+    const lExpense = parseFloat(document.getElementById('l-expense').value) || 0;
+    const disc = currentDiscounts.reduce((a,b) => a + (parseFloat(b.amount)||0), 0);
+    const balance = (parseFloat(document.getElementById('p-balance').value)||0) + (parseFloat(document.getElementById('l-balance').value)||0);
+    document.getElementById('d-patient-total').textContent = pTotal.toLocaleString();
+    document.getElementById('d-lab-total').textContent = lTotal.toLocaleString();
+    document.getElementById('d-expense-total').textContent = (pExpense + lExpense).toLocaleString();
+    document.getElementById('d-discount-total').textContent = disc.toLocaleString();
+    document.getElementById('d-balance-total').textContent = balance.toLocaleString();
+}
+
+// ===== DISCOUNTS =====
+
+function addDiscount() {
+    const name = document.getElementById('disc-name').value.trim();
+    const amount = parseFloat(document.getElementById('disc-amount').value) || 0;
+    const reason = document.getElementById('disc-reason').value.trim();
+    if (!name) return alert('أدخل اسم الحالة');
+    currentDiscounts.push({name, amount, reason});
+    renderDiscounts();
+    document.getElementById('disc-name').value = '';
+    document.getElementById('disc-amount').value = '';
+    document.getElementById('disc-reason').value = '';
+    updateCombinedExpense();
+}
+
+function removeDiscount(i) {
+    currentDiscounts.splice(i, 1);
+    renderDiscounts();
+    updateCombinedExpense();
+}
+
+function renderDiscounts() {
+    const tb = document.querySelector('#discountTable tbody');
+    tb.innerHTML = currentDiscounts.map((d,i) => `
+        <tr><td>${d.name}</td><td>${d.amount}</td><td>${d.reason}</td>
+        <td><button class="btn-delete" onclick="removeDiscount(${i})">🗑️</button></td></tr>
+    `).join('');
+}
+
+// ===== SAVE / LOAD =====
+
+function saveCurrentDay() {
+    const date = document.getElementById('dayDate').value;
+    if (!date) return alert('اختر تاريخ اليوم أولاً');
+    const data = wareedGetData();
+    const dayData = {
+        date,
+        patient: {
+            morning: parseFloat(document.getElementById('p-morning').value)||0,
+            evening: parseFloat(document.getElementById('p-evening').value)||0,
+            total: parseFloat(document.getElementById('p-total').value)||0,
+            expense: parseFloat(document.getElementById('p-expense').value)||0,
+            balance: parseFloat(document.getElementById('p-balance').value)||0
+        },
+        lab: {
+            morning: parseFloat(document.getElementById('l-morning').value)||0,
+            evening: parseFloat(document.getElementById('l-evening').value)||0,
+            total: parseFloat(document.getElementById('l-total').value)||0,
+            expense: parseFloat(document.getElementById('l-expense').value)||0,
+            balance: parseFloat(document.getElementById('l-balance').value)||0,
+            peakM: parseFloat(document.getElementById('l-peak-m').value)||0,
+            peakE: parseFloat(document.getElementById('l-peak-e').value)||0,
+            basemM: parseFloat(document.getElementById('l-basem-m').value)||0,
+            basemE: parseFloat(document.getElementById('l-basem-e').value)||0,
+            path: parseFloat(document.getElementById('l-path').value)||0,
+            other: parseFloat(document.getElementById('l-other').value)||0,
+            patM: parseFloat(document.getElementById('l-labpat-m').value)||0,
+            patE: parseFloat(document.getElementById('l-labpat-e').value)||0,
+            extM: parseFloat(document.getElementById('l-ext-m').value)||0,
+            extE: parseFloat(document.getElementById('l-ext-e').value)||0
+        },
+        basem: {
+            inM: parseFloat(document.getElementById('basem-in-m').value)||0,
+            inE: parseFloat(document.getElementById('basem-in-e').value)||0,
+            inTotal: parseFloat(document.getElementById('basem-in-total').value)||0,
+            ratio: parseFloat(document.getElementById('basem-ratio').value)||0,
+            balance: parseFloat(document.getElementById('basem-balance').value)||0
+        },
+        nonBasem: {
+            m: parseFloat(document.getElementById('nonbasem-m').value)||0,
+            e: parseFloat(document.getElementById('nonbasem-e').value)||0,
+            total: parseFloat(document.getElementById('nonbasem-total').value)||0
+        },
+        expenses: {},
+        discounts: [...currentDiscounts]
+    };
+    expenseFields.forEach(id => { dayData.expenses[id] = parseFloat(document.getElementById(id).value) || 0; });
+    data[date] = dayData;
+    wareedSetData(data);
+    alert('✅ تم حفظ بيانات اليوم بنجاح');
+    renderMonthlyTable();
+}
+
+function loadDayData() {
+    const date = document.getElementById('dayDate').value;
+    if (!date) return;
+    const data = wareedGetData();
+    const day = data[date];
+    if (!day) {
+        ['p-morning','p-evening','l-morning','l-evening','l-peak-m','l-peak-e','l-labpat-m','l-labpat-e','l-basem-m','l-basem-e','l-path','l-other','basem-in-m','basem-in-e','nonbasem-m','nonbasem-e','l-ext-m','l-ext-e'].forEach(id => document.getElementById(id).value = 0);
+        expenseFields.forEach(id => document.getElementById(id).value = 0);
+        currentDiscounts = [];
+        renderDiscounts();
+        calcPatient(); calcLabDetails(); calcBasem(); calcNonBasem(); calcExpenses();
+        return;
+    }
+    document.getElementById('p-morning').value = day.patient.morning;
+    document.getElementById('p-evening').value = day.patient.evening;
+    document.getElementById('l-morning').value = day.lab.morning;
+    document.getElementById('l-evening').value = day.lab.evening;
+    document.getElementById('l-ext-m').value = day.lab.extM !== undefined ? day.lab.extM : day.lab.morning;
+    document.getElementById('l-ext-e').value = day.lab.extE !== undefined ? day.lab.extE : day.lab.evening;
+    document.getElementById('l-peak-m').value = day.lab.peakM || 0;
+    document.getElementById('l-peak-e').value = day.lab.peakE || 0;
+    document.getElementById('l-basem-m').value = day.lab.basemM || 0;
+    document.getElementById('l-basem-e').value = day.lab.basemE || 0;
+    document.getElementById('l-path').value = day.lab.path || 0;
+    document.getElementById('l-other').value = day.lab.other || 0;
+    document.getElementById('l-labpat-m').value = day.lab.patM || 0;
+    document.getElementById('l-labpat-e').value = day.lab.patE || 0;
+    document.getElementById('basem-in-m').value = day.basem ? (day.basem.inM || 0) : 0;
+    document.getElementById('basem-in-e').value = day.basem ? (day.basem.inE || 0) : 0;
+    expenseFields.forEach(id => { document.getElementById(id).value = day.expenses[id] || 0; });
+    calcLab();
+    currentDiscounts = day.discounts || [];
+    renderDiscounts();
+    calcPatient(); calcLabDetails(); calcBasem(); calcNonBasem(); calcExpenses();
+}
+
+function deleteDay(date) {
+    if (!confirm('هل أنت متأكد من حذف بيانات ' + date + '؟')) return;
+    const data = wareedGetData(); delete data[date]; wareedSetData(data);
+    renderMonthlyTable();
+    if (document.getElementById('dayDate').value === date) loadDayData();
+}
+
+function editDay(date) {
+    document.getElementById('dayDate').value = date;
+    loadDayData();
+    window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function renderMonthlyTable() {
+    const data = wareedGetData();
+    const tbody = document.getElementById('monthlyBody');
+    const empty = document.getElementById('monthlyEmpty');
+    const dates = Object.keys(data).sort();
+    if (dates.length === 0) { tbody.innerHTML = ''; empty.style.display = 'block'; return; }
+    empty.style.display = 'none';
+    tbody.innerHTML = dates.map(date => {
+        const d = data[date];
+        const disc = (d.discounts||[]).reduce((a,b)=>a+(b.amount||0),0);
+        const totalBalance = (d.patient.balance||0) + (d.lab.balance||0);
+        return `<tr>
+            <td>${date}</td>
+            <td>${d.patient.morning}</td><td>${d.patient.evening}</td><td><strong>${d.patient.total}</strong></td>
+            <td>${d.lab.morning}</td><td>${d.lab.evening}</td><td><strong>${d.lab.total}</strong></td>
+            <td>${d.patient.expense + d.lab.expense}</td>
+            <td>${disc}</td>
+            <td style="color:#2e7d32; font-weight:700">${totalBalance}</td>
+            <td>
+                <button class="btn-edit" onclick="editDay('${date}')">✏️</button>
+                <button class="btn-delete" onclick="deleteDay('${date}')">🗑️</button>
+            </td>
+        </tr>`;
+    }).join('');
+}
+
+function printWareed() { window.print(); }
+
 </script>
 </body>
 </html>
