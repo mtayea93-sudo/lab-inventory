@@ -1375,7 +1375,7 @@
             <div class="content-card">
                 <h2>📊 بيان وارد ومصروف</h2>
                 <div class="hint-box">
-                    💡 "المصاريف والخصم" = مجموع كل المصاريف التفصيلية + مجموع خصومات البيشنت. مصاريف اللاب = مجموع التفاصيل الإضافية تلقائياً.
+                    💡 "المصاريف" = مجموع كل المصاريف التفصيلية فقط — الخصومات تُعرض منفصلة ولا تُخصم من الإجمالي. مصاريف اللاب = مجموع التفاصيل الإضافية تلقائياً.
                 </div>
 
                 <!-- Day selector -->
@@ -1392,7 +1392,7 @@
                 <div class="stats-grid">
                     <div class="stat-box"><div class="number" id="d-patient-total">0</div><div class="label">إجمالي البيشنت</div></div>
                     <div class="stat-box"><div class="number" id="d-lab-total">0</div><div class="label">إجمالي اللاب</div></div>
-                    <div class="stat-box"><div class="number" id="d-expense-total">0</div><div class="label">مصاريف+خصم</div></div>
+                    <div class="stat-box"><div class="number" id="d-expense-total">0</div><div class="label">مصاريف</div></div>
                     <div class="stat-box"><div class="number" id="d-discount-total">0</div><div class="label">إجمالي الخصومات</div></div>
                     <div class="stat-box"><div class="number" id="d-balance-total">0</div><div class="label">الباقي الكلي</div></div>
                 </div>
@@ -1408,19 +1408,22 @@
                             <div class="input-group"><label>الإجمالي</label><input type="number" id="p-total" value="0" readonly></div>
                         </div>
                         <div class="input-row">
-                            <div class="input-group"><label>المصاريف والخصم (تلقائي)</label><input type="number" id="p-expense" value="0" readonly style="background:#fff3e0;"></div>
+                            <div class="input-group"><label>المصاريف (تلقائي)</label><input type="number" id="p-expense" value="0" readonly style="background:#fff3e0;"></div>
                             <div class="input-group"><label>الباقي</label><input type="number" id="p-balance" value="0" readonly style="color:#2e7d32; font-weight:800;"></div>
                         </div>
 
                         <h4>✂️ خصومات البيشنت</h4>
                         <div class="input-row">
-                            <div class="input-group" style="flex:2"><label>اسم الحالة</label><input type="text" id="disc-name" placeholder="اسم المريض"></div>
-                            <div class="input-group"><label>الخصم</label><input type="number" id="disc-amount" placeholder="0"></div>
-                            <div class="input-group" style="flex:2"><label>السبب</label><input type="text" id="disc-reason" placeholder="سبب الخصم"></div>
+                            <div class="input-group" style="flex:2"><label>اسم الحالة *</label><input type="text" id="disc-name" placeholder="اسم المريض"></div>
+                            <div class="input-group"><label>الحساب *</label><input type="number" id="disc-total" placeholder="0" oninput="calcDiscPaid()"></div>
+                            <div class="input-group"><label>قيمة الخصم *</label><input type="number" id="disc-amount" placeholder="0" oninput="calcDiscPaid()"></div>
+                            <div class="input-group"><label>المدفوع (تلقائي)</label><input type="number" id="disc-paid" value="0" readonly style="background:#e8f5e9; color:#2e7d32; font-weight:800;"></div>
+                            <div class="input-group" style="flex:2"><label>سبب الخصم *</label><input type="text" id="disc-reason" placeholder="سبب الخصم"></div>
+                            <div class="input-group" style="flex:2"><label>القائم بالخصم *</label><input type="text" id="disc-by" placeholder="اسم القائم بالخصم"></div>
                             <button class="btn-add" onclick="addDiscount()">➕ إضافة</button>
                         </div>
                         <table class="data-table" id="discountTable">
-                            <thead><tr><th>اسم الحالة</th><th>الخصم</th><th>السبب</th><th>حذف</th></tr></thead>
+                            <thead><tr><th>اسم الحالة</th><th>الحساب</th><th>الخصم</th><th>المدفوع</th><th>السبب</th><th>القائم بالخصم</th><th>حذف</th></tr></thead>
                             <tbody></tbody>
                         </table>
                     </div>
@@ -1561,7 +1564,7 @@
                                 <th>لاب صباحي</th>
                                 <th>لاب مسائي</th>
                                 <th>لاب إجمالي</th>
-                                <th>مصاريف+خصم</th>
+                                <th>مصاريف</th>
                                 <th>خصومات</th>
                                 <th>باقي</th>
                                 <th>إجراءات</th>
@@ -4518,8 +4521,7 @@ function calcExpenses() {
 function updateCombinedExpense() {
     let sumExpenses = 0;
     expenseFields.forEach(id => { sumExpenses += parseFloat(document.getElementById(id).value) || 0; });
-    let sumDiscounts = currentDiscounts.reduce((a, b) => a + (parseFloat(b.amount) || 0), 0);
-    let combined = sumExpenses + sumDiscounts;
+    let combined = sumExpenses; // المصاريف فقط — الخصومات تُعرض منفصلة ولا تُخصم من الإجمالي
     document.getElementById('p-expense').value = combined;
     const pTotal = parseFloat(document.getElementById('p-total').value) || 0;
     document.getElementById('p-balance').value = pTotal - combined;
@@ -4542,16 +4544,33 @@ function updateDayStats() {
 
 // ===== DISCOUNTS =====
 
+function calcDiscPaid() {
+    const total = parseFloat(document.getElementById('disc-total').value) || 0;
+    const amount = parseFloat(document.getElementById('disc-amount').value) || 0;
+    document.getElementById('disc-paid').value = total - amount;
+}
+
 function addDiscount() {
     const name = document.getElementById('disc-name').value.trim();
+    const total = parseFloat(document.getElementById('disc-total').value) || 0;
     const amount = parseFloat(document.getElementById('disc-amount').value) || 0;
     const reason = document.getElementById('disc-reason').value.trim();
+    const by = document.getElementById('disc-by').value.trim();
     if (!name) return alert('أدخل اسم الحالة');
-    currentDiscounts.push({name, amount, reason});
+    if (!total) return alert('أدخل الحساب');
+    if (!amount) return alert('أدخل قيمة الخصم');
+    if (amount > total) return alert('⚠️ قيمة الخصم أكبر من الحساب!');
+    if (!reason) return alert('أدخل سبب الخصم');
+    if (!by) return alert('أدخل اسم القائم بالخصم');
+    const paid = total - amount;
+    currentDiscounts.push({name, total, amount, paid, reason, by});
     renderDiscounts();
     document.getElementById('disc-name').value = '';
+    document.getElementById('disc-total').value = '';
     document.getElementById('disc-amount').value = '';
+    document.getElementById('disc-paid').value = '0';
     document.getElementById('disc-reason').value = '';
+    document.getElementById('disc-by').value = '';
     updateCombinedExpense();
 }
 
@@ -4564,7 +4583,7 @@ function removeDiscount(i) {
 function renderDiscounts() {
     const tb = document.querySelector('#discountTable tbody');
     tb.innerHTML = currentDiscounts.map((d,i) => `
-        <tr><td>${d.name}</td><td>${d.amount}</td><td>${d.reason}</td>
+        <tr><td>${d.name}</td><td>${d.total !== undefined ? d.total : '—'}</td><td>${d.amount}</td><td style="color:#2e7d32; font-weight:700;">${d.paid !== undefined ? d.paid : '—'}</td><td>${d.reason}</td><td>${d.by || '—'}</td>
         <td><button class="btn-delete" onclick="removeDiscount(${i})">🗑️</button></td></tr>
     `).join('');
 }
