@@ -469,6 +469,7 @@
 <base target="_blank">
 <base target="_blank">
 <base target="_blank">
+<base target="_blank">
 </head>
 <body>
 
@@ -1422,10 +1423,6 @@
                             <div class="input-group" style="flex:2"><label>القائم بالخصم *</label><input type="text" id="disc-by" placeholder="اسم القائم بالخصم"></div>
                             <button class="btn-add" onclick="addDiscount()">➕ إضافة</button>
                         </div>
-                        <table class="data-table" id="discountTable">
-                            <thead><tr><th>اسم الحالة</th><th>الحساب</th><th>الخصم</th><th>المدفوع</th><th>السبب</th><th>القائم بالخصم</th><th>حذف</th></tr></thead>
-                            <tbody></tbody>
-                        </table>
                     </div>
 
                     <!-- LAB BRANCH -->
@@ -1481,6 +1478,30 @@
                             <div class="input-group"><label>مسائي</label><input type="number" id="nonbasem-e" value="0" readonly style="background:#e8f5e9;"></div>
                             <div class="input-group"><label>الإجمالي</label><input type="number" id="nonbasem-total" value="0" readonly style="background:#e8f5e9; font-weight:700;"></div>
                         </div>
+                    </div>
+                </div>
+
+                <!-- LISTS ROW -->
+                <div class="two-col-grid">
+                    <div class="sub-card">
+                        <h3>📋 قائمة خصومات البيشنت</h3>
+                        <table class="data-table" id="discountTable">
+                            <thead><tr><th>اسم الحالة</th><th>الحساب</th><th>الخصم</th><th>المدفوع</th><th>السبب</th><th>القائم بالخصم</th><th>حذف</th></tr></thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                    <div class="sub-card">
+                        <h3>🧾 باقي حساب</h3>
+                        <div class="input-row">
+                            <div class="input-group" style="flex:2"><label>الاسم *</label><input type="text" id="bal-name" placeholder="الاسم"></div>
+                            <div class="input-group"><label>النوع *</label><select id="bal-type" style="width:100%; padding:12px; border:2px solid #e0e0e0; border-radius:10px; font-size:14px; background:#fff;"><option value="بيشنت">بيشنت</option><option value="لاب">لاب</option></select></div>
+                            <div class="input-group"><label>باقي الحساب *</label><input type="number" id="bal-amount" placeholder="0"></div>
+                            <button class="btn-add" onclick="addBalance()">➕ إضافة</button>
+                        </div>
+                        <table class="data-table" id="balanceTable">
+                            <thead><tr><th>الاسم</th><th>النوع</th><th>باقي الحساب</th><th>تاريخ التسجيل</th><th>تم السداد</th><th>حذف</th></tr></thead>
+                            <tbody></tbody>
+                        </table>
                     </div>
                 </div>
 
@@ -4320,6 +4341,7 @@
 // ===== وحدة «بيان وارد ومصروف» — مضافة من ملف معدل_استهلاك_واحتياج_المعمل =====
 // ============================================================
 let currentDiscounts = [];
+let currentBalances = [];
 const expenseFields = ['e-tissues','e-gloves','e-cotton','e-syringes','e-pens','e-pins','e-sticks','e-saline','e-water','e-insulin','e-heparin','e-bags','e-incinerator','e-sugar','e-tea','e-coffee','e-food','e-doctor','e-other','e-lab-m','e-lab-e'];
 
 function syncLabBalanceToFinance() {
@@ -4544,6 +4566,44 @@ function updateDayStats() {
 
 // ===== DISCOUNTS =====
 
+function addBalance() {
+    const name = document.getElementById('bal-name').value.trim();
+    const type = document.getElementById('bal-type').value;
+    const amount = parseFloat(document.getElementById('bal-amount').value) || 0;
+    if (!name) return alert('أدخل الاسم');
+    if (!amount) return alert('أدخل باقي الحساب');
+    const date = document.getElementById('dayDate').value || new Date().toISOString().split('T')[0];
+    currentBalances.push({ id: Date.now(), name, type, amount, date });
+    renderBalances();
+    document.getElementById('bal-name').value = '';
+    document.getElementById('bal-amount').value = '';
+}
+
+function renderBalances() {
+    const tb = document.querySelector('#balanceTable tbody');
+    if (!tb) return;
+    tb.innerHTML = currentBalances.map(b => `
+        <tr>
+            <td style="font-weight:700;">${b.name}</td>
+            <td>${b.type}</td>
+            <td style="color:#c62828; font-weight:700;">${b.amount}</td>
+            <td>${b.date}</td>
+            <td style="text-align:center;"><input type="checkbox" title="تم السداد" onchange="markBalancePaid(${b.id})" style="width:20px; height:20px; cursor:pointer;"></td>
+            <td><button class="btn-delete" onclick="removeBalance(${b.id})">🗑️</button></td>
+        </tr>
+    `).join('');
+}
+
+function markBalancePaid(id) {
+    currentBalances = currentBalances.filter(b => b.id !== id);
+    renderBalances();
+}
+
+function removeBalance(id) {
+    currentBalances = currentBalances.filter(b => b.id !== id);
+    renderBalances();
+}
+
 function calcDiscPaid() {
     const total = parseFloat(document.getElementById('disc-total').value) || 0;
     const amount = parseFloat(document.getElementById('disc-amount').value) || 0;
@@ -4633,7 +4693,8 @@ function saveCurrentDay() {
             total: parseFloat(document.getElementById('nonbasem-total').value)||0
         },
         expenses: {},
-        discounts: [...currentDiscounts]
+        discounts: [...currentDiscounts],
+        balances: [...currentBalances]
     };
     expenseFields.forEach(id => { dayData.expenses[id] = parseFloat(document.getElementById(id).value) || 0; });
     data[date] = dayData;
@@ -4652,6 +4713,8 @@ function loadDayData() {
         expenseFields.forEach(id => document.getElementById(id).value = 0);
         currentDiscounts = [];
         renderDiscounts();
+        currentBalances = [];
+        renderBalances();
         calcPatient(); calcLabDetails(); calcBasem(); calcNonBasem(); calcExpenses();
         return;
     }
@@ -4675,6 +4738,8 @@ function loadDayData() {
     calcLab();
     currentDiscounts = day.discounts || [];
     renderDiscounts();
+    currentBalances = day.balances || [];
+    renderBalances();
     calcPatient(); calcLabDetails(); calcBasem(); calcNonBasem(); calcExpenses();
 }
 
