@@ -458,6 +458,22 @@
     #wareedTab .btn-add, #wareedTab .print-btn, #wareedTab .btn-edit, #wareedTab .btn-delete { display: none !important; }
     #wareedTab .content-card { box-shadow: none !important; page-break-inside: avoid; }
 }
+/* بيان وارد ومصروف بعرض كامل */
+body.wareed-wide .main-content { max-width: 100%; }
+
+/* علامة مائية M.Tayea — ظاهرة في كل الصفحات، لا تمنع النقر ولا تحجب التفاصيل */
+.site-watermark {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 2147483647;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='360' height='240'%3E%3Ctext x='50%25' y='50%25' font-size='36' font-weight='900' fill='rgba(21,101,192,0.14)' text-anchor='middle' transform='rotate(-30 180 120)' font-family='Segoe UI, Arial, sans-serif'%3EM.Tayea%3C/text%3E%3C/svg%3E");
+    background-repeat: repeat;
+}
+@media print {
+    .site-watermark { display: none !important; }
+}
+
     </style>
 <base target="_blank">
     <!-- jsPDF for PDF export -->
@@ -472,6 +488,7 @@
 <base target="_blank">
 </head>
 <body>
+<div class="site-watermark" aria-hidden="true"></div>
 
 <!-- ===== LOGIN SCREEN ===== -->
 <div class="login-screen" id="loginScreen">
@@ -1491,8 +1508,7 @@
                     </div>
                 </div>
 
-                <!-- LISTS ROW -->
-                <div>
+                <div class="two-col-grid" style="margin-top:20px;">
                     <div class="sub-card">
                         <h3>📋 قائمة خصومات البيشنت</h3>
                         <table class="data-table" id="discountTable">
@@ -1507,11 +1523,11 @@
                             <tbody></tbody>
                         </table>
                         <div id="balTotals" style="display:flex; gap:14px; flex-wrap:wrap; margin-top:14px;"></div>
+
                     </div>
                 </div>
 
-                <!-- EXPENSES DETAIL -->
-                <div class="section-title">📋 بيان المصاريف التفصيلي</div>
+                <!-- EXPENSES DETAIL -->tion-title">📋 بيان المصاريف التفصيلي</div>
                 <div class="sub-card">
                     <div class="sub-card" style="border:none; padding:0;">
                         <h4>🧴 مسلتزمات</h4>
@@ -5075,7 +5091,7 @@ window.userLogin = function() {
         return true;
     }
     const _st = window.showTab;
-    window.showTab = function(tab, btn) { if (!_permGuard(tab)) return; _st(tab, btn); };
+    window.showTab = function(tab, btn) { if (!_permGuard(tab)) return; _st(tab, btn); document.body.classList.toggle('wareed-wide', tab === 'wareed'); };
     const _sat = window.showAdminTab;
     window.showAdminTab = function(tab, btn) { if (!_permGuard(tab)) return; _sat(tab, btn); };
 })();
@@ -5113,6 +5129,7 @@ window.changeMyPass = function() {
     window.adminLogout = function() {
         _admLogout();
         window._session = null;
+        document.body.classList.remove('wareed-wide');
         document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
         document.querySelectorAll('#adminDashboard .nav-tab').forEach(b => b.style.display = '');
         const cp = document.getElementById('userChangePassBtn');
