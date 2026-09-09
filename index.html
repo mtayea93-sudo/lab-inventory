@@ -1423,6 +1423,16 @@
                             <div class="input-group" style="flex:2"><label>القائم بالخصم *</label><input type="text" id="disc-by" placeholder="اسم القائم بالخصم"></div>
                             <button class="btn-add" onclick="addDiscount()">➕ إضافة</button>
                         </div>
+
+                        <div style="margin-top:15px;">
+                        <h3>🧾 باقي حساب</h3>
+                        <div class="input-row">
+                            <div class="input-group" style="flex:2"><label>الاسم *</label><input type="text" id="bal-name" placeholder="الاسم"></div>
+                            <div class="input-group"><label>النوع *</label><select id="bal-type" style="width:100%; padding:12px; border:2px solid #e0e0e0; border-radius:10px; font-size:14px; background:#fff;"><option value="بيشنت">بيشنت</option><option value="لاب">لاب</option></select></div>
+                            <div class="input-group"><label>باقي الحساب *</label><input type="number" id="bal-amount" placeholder="0"></div>
+                            <button class="btn-add" onclick="addBalance()">➕ إضافة</button>
+                        </div>
+                        </div>
                     </div>
 
                     <!-- LAB BRANCH -->
@@ -1482,7 +1492,7 @@
                 </div>
 
                 <!-- LISTS ROW -->
-                <div class="two-col-grid">
+                <div>
                     <div class="sub-card">
                         <h3>📋 قائمة خصومات البيشنت</h3>
                         <table class="data-table" id="discountTable">
@@ -1491,17 +1501,12 @@
                         </table>
                     </div>
                     <div class="sub-card">
-                        <h3>🧾 باقي حساب</h3>
-                        <div class="input-row">
-                            <div class="input-group" style="flex:2"><label>الاسم *</label><input type="text" id="bal-name" placeholder="الاسم"></div>
-                            <div class="input-group"><label>النوع *</label><select id="bal-type" style="width:100%; padding:12px; border:2px solid #e0e0e0; border-radius:10px; font-size:14px; background:#fff;"><option value="بيشنت">بيشنت</option><option value="لاب">لاب</option></select></div>
-                            <div class="input-group"><label>باقي الحساب *</label><input type="number" id="bal-amount" placeholder="0"></div>
-                            <button class="btn-add" onclick="addBalance()">➕ إضافة</button>
-                        </div>
+                        <h3>🧾 قائمة باقي الحساب <span style="font-size:12px; color:#888;">(ثابتة — بتفضل ظاهرة وتترحل كل يوم لحد ما تتعلم "تم السداد")</span></h3>
                         <table class="data-table" id="balanceTable">
                             <thead><tr><th>الاسم</th><th>النوع</th><th>باقي الحساب</th><th>تاريخ التسجيل</th><th>تم السداد</th><th>حذف</th></tr></thead>
                             <tbody></tbody>
                         </table>
+                        <div id="balTotals" style="display:flex; gap:14px; flex-wrap:wrap; margin-top:14px;"></div>
                     </div>
                 </div>
 
@@ -4341,7 +4346,7 @@
 // ===== وحدة «بيان وارد ومصروف» — مضافة من ملف معدل_استهلاك_واحتياج_المعمل =====
 // ============================================================
 let currentDiscounts = [];
-let currentBalances = [];
+let currentBalances = JSON.parse(localStorage.getItem('wareed_balances') || '[]');
 const expenseFields = ['e-tissues','e-gloves','e-cotton','e-syringes','e-pens','e-pins','e-sticks','e-saline','e-water','e-insulin','e-heparin','e-bags','e-incinerator','e-sugar','e-tea','e-coffee','e-food','e-doctor','e-other','e-lab-m','e-lab-e'];
 
 function syncLabBalanceToFinance() {
@@ -4566,6 +4571,44 @@ function updateDayStats() {
 
 // ===== DISCOUNTS =====
 
+// ===== باقي الحساب: قائمة ثابتة بتترحل كل يوم لحد "تم السداد" (مستقلة عن أيام الوارد) =====
+function getBalances(){ return JSON.parse(localStorage.getItem('wareed_balances') || '[]'); }
+async function saveBalancesToFirebase(){
+    try { await db.collection('lab').doc('wareed_balances').set({ balances: getBalances(), updatedAt: new Date().toISOString() }); } catch(e){}
+}
+function saveBalances(list){
+    currentBalances = list;
+    localStorage.setItem('wareed_balances', JSON.stringify(list));
+    saveBalancesToFirebase();
+    renderBalances();
+}
+renderBalances();
+function loadBalancesFromFirebase(){
+    try {
+        db.collection('lab').doc('wareed_balances').get().then(snap => {
+            if (snap.exists) {
+                const remote = snap.data().balances || [];
+                if (JSON.stringify(remote) !== JSON.stringify(getBalances())) {
+                    currentBalances = remote;
+                    localStorage.setItem('wareed_balances', JSON.stringify(remote));
+                    renderBalances();
+                }
+            } else { saveBalancesToFirebase(); }
+        }).catch(()=>{});
+    } catch(e){}
+}
+try {
+    db.collection('lab').doc('wareed_balances').onSnapshot(snap => {
+        if (!snap.exists) return;
+        const remote = snap.data().balances || [];
+        if (JSON.stringify(remote) !== JSON.stringify(getBalances())) {
+            currentBalances = remote;
+            localStorage.setItem('wareed_balances', JSON.stringify(remote));
+            renderBalances();
+        }
+    });
+} catch(e){}
+
 function addBalance() {
     const name = document.getElementById('bal-name').value.trim();
     const type = document.getElementById('bal-type').value;
@@ -4573,8 +4616,9 @@ function addBalance() {
     if (!name) return alert('أدخل الاسم');
     if (!amount) return alert('أدخل باقي الحساب');
     const date = document.getElementById('dayDate').value || new Date().toISOString().split('T')[0];
-    currentBalances.push({ id: Date.now(), name, type, amount, date });
-    renderBalances();
+    const list = getBalances();
+    list.push({ id: Date.now(), name, type, amount, date });
+    saveBalances(list);
     document.getElementById('bal-name').value = '';
     document.getElementById('bal-amount').value = '';
 }
@@ -4582,26 +4626,37 @@ function addBalance() {
 function renderBalances() {
     const tb = document.querySelector('#balanceTable tbody');
     if (!tb) return;
-    tb.innerHTML = currentBalances.map(b => `
+    const list = getBalances();
+    let sumP = 0, sumL = 0;
+    tb.innerHTML = list.map(b => {
+        const amt = parseFloat(b.amount) || 0;
+        if (b.type === 'لاب') sumL += amt; else sumP += amt;
+        const badge = b.type === 'لاب'
+            ? '<span style="background:#fff3e0;color:#e65100;padding:4px 14px;border-radius:20px;font-size:12px;font-weight:700;white-space:nowrap;">🧪 لاب</span>'
+            : '<span style="background:#e3f2fd;color:#1565C0;padding:4px 14px;border-radius:20px;font-size:12px;font-weight:700;white-space:nowrap;">🧍 بيشنت</span>';
+        return `
         <tr>
             <td style="font-weight:700;">${b.name}</td>
-            <td>${b.type}</td>
+            <td>${badge}</td>
             <td style="color:#c62828; font-weight:700;">${b.amount}</td>
             <td>${b.date}</td>
-            <td style="text-align:center;"><input type="checkbox" title="تم السداد" onchange="markBalancePaid(${b.id})" style="width:20px; height:20px; cursor:pointer;"></td>
+            <td style="text-align:center;"><input type="checkbox" title="تم السداد — هتتشال من القايمة" onchange="markBalancePaid(${b.id})" style="width:20px; height:20px; cursor:pointer;"></td>
             <td><button class="btn-delete" onclick="removeBalance(${b.id})">🗑️</button></td>
-        </tr>
-    `).join('');
+        </tr>`;
+    }).join('');
+    const tot = document.getElementById('balTotals');
+    if (tot) tot.innerHTML =
+        '<span style="background:#e3f2fd;color:#1565C0;padding:8px 18px;border-radius:12px;font-weight:800;">🧍 مجموع البيشنت: ' + sumP + '</span>'
+        + '<span style="background:#fff3e0;color:#e65100;padding:8px 18px;border-radius:12px;font-weight:800;">🧪 مجموع اللاب: ' + sumL + '</span>'
+        + '<span style="background:#f5f5f5;color:#333;padding:8px 18px;border-radius:12px;font-weight:800;">الإجمالي: ' + (sumP + sumL) + '</span>';
 }
 
 function markBalancePaid(id) {
-    currentBalances = currentBalances.filter(b => b.id !== id);
-    renderBalances();
+    saveBalances(getBalances().filter(b => b.id !== id));
 }
 
 function removeBalance(id) {
-    currentBalances = currentBalances.filter(b => b.id !== id);
-    renderBalances();
+    saveBalances(getBalances().filter(b => b.id !== id));
 }
 
 function calcDiscPaid() {
@@ -4693,8 +4748,7 @@ function saveCurrentDay() {
             total: parseFloat(document.getElementById('nonbasem-total').value)||0
         },
         expenses: {},
-        discounts: [...currentDiscounts],
-        balances: [...currentBalances]
+        discounts: [...currentDiscounts]
     };
     expenseFields.forEach(id => { dayData.expenses[id] = parseFloat(document.getElementById(id).value) || 0; });
     data[date] = dayData;
@@ -4713,8 +4767,6 @@ function loadDayData() {
         expenseFields.forEach(id => document.getElementById(id).value = 0);
         currentDiscounts = [];
         renderDiscounts();
-        currentBalances = [];
-        renderBalances();
         calcPatient(); calcLabDetails(); calcBasem(); calcNonBasem(); calcExpenses();
         return;
     }
@@ -4738,8 +4790,6 @@ function loadDayData() {
     calcLab();
     currentDiscounts = day.discounts || [];
     renderDiscounts();
-    currentBalances = day.balances || [];
-    renderBalances();
     calcPatient(); calcLabDetails(); calcBasem(); calcNonBasem(); calcExpenses();
 }
 
@@ -5080,6 +5130,7 @@ function _usersInit(){
     if (wuN) wuN.addEventListener('keypress', e => { if (e.key === 'Enter') window.userLogin(); });
     if (wuP) wuP.addEventListener('keypress', e => { if (e.key === 'Enter') window.userLogin(); });
     loadUsersFromFirebase();
+    loadBalancesFromFirebase();
 }
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', _usersInit);
 else _usersInit();
