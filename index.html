@@ -469,7 +469,6 @@
 <base target="_blank">
 <base target="_blank">
 <base target="_blank">
-<base target="_blank">
 </head>
 <body>
 
@@ -493,10 +492,24 @@
             🔐 تسجيل الدخول
         </button>
 
+        <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e0e0e0;">
+            <div style="font-size: 14px; font-weight: 700; color: #666; margin-bottom: 12px; text-align: center;">👤 دخول مستخدم</div>
+            <div class="form-group">
+                <label>اسم المستخدم</label>
+                <input type="text" id="wuName" placeholder="اسم المستخدم" autocomplete="username">
+            </div>
+            <div class="form-group">
+                <label>🔒 كلمة المرور</label>
+                <input type="password" id="wuPass" placeholder="كلمة المرور" autocomplete="current-password">
+            </div>
+            <div class="error-msg" id="wuError">
+                ❌ اسم المستخدم أو كلمة المرور غير صحيحة
+            </div>
+            <button class="btn-login" onclick="userLogin()">🔐 دخول المستخدم</button>
+        </div>
+
         <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e0e0e0; text-align: center;">
-            <button onclick="showAdminLogin()" style="background: none; border: 2px solid #1565C0; color: #1565C0; padding: 10px 25px; border-radius: 12px; cursor: pointer; font-size: 14px; font-weight: 700; transition: all 0.3s;">
-                👨‍💼 دخول الإدارة
-            </button>
+            <button onclick="showAdminLogin()" style="display:none;">👨‍💼 دخول الإدارة</button>
         </div>
     </div>
 </div>
@@ -544,7 +557,14 @@
             <button class="nav-tab" onclick="showAdminTab('settings', this)">⚙️ الإعدادات</button>
             <button class="nav-tab" onclick="showAdminTab('debts', this)">💰 المديونية</button>
             <button class="nav-tab" onclick="showAdminTab('adminOrders', this)">🛒 الطلبيات</button>
+            <button class="nav-tab" onclick="showTab('inventory', this)">📦 المخزون</button>
+            <button class="nav-tab" onclick="showTab('consumption', this)">📊 الاستهلاك</button>
+            <button class="nav-tab" onclick="showTab('dailyStatement', this)">📋 بيان الاستهلاك اليومي</button>
+            <button class="nav-tab" onclick="showTab('monthlyStats', this)">📈 الإحصائيات الشهرية</button>
+            <button class="nav-tab" onclick="showTab('orders', this)">🛒 الطلبيات</button>
+            <button class="nav-tab" onclick="openWareedTab(this)">📊 بيان وارد ومصروف</button>
         </div>
+        <button class="btn-logout" id="userChangePassBtn" onclick="changeMyPass()" style="display:none; background:linear-gradient(135deg,#1565C0,#42a5f5); margin-left:10px;">🔑 تغيير كلمة المرور</button>
         <button class="btn-logout" onclick="adminLogout()">🚪 تسجيل الخروج</button>
     </div>
 
@@ -780,7 +800,7 @@
             <div class="content-card">
                 <h2>👥 إدارة المستخدمين</h2>
                 <div class="hint-box">
-                    💡 يمكنك إضافة مستخدمين جدد وتعديل صلاحياتهم. كلمة المرور الافتراضية للمستخدمين الجدد هي "user123".
+                    💡 يمكنك إضافة مستخدمين جدد وتحديد صلاحياتهم. كلمة المرور الافتراضية تلقائية (mt1, mt2, ...) ويستطيع المستخدم تغييرها بعد الدخول.
                 </div>
 
                 <div class="input-row">
@@ -794,6 +814,26 @@
                             <option value="user">مستخدم عادي</option>
                             <option value="admin">مشرف</option>
                         </select>
+                    </div>
+                    <div class="input-group" style="flex:1 1 100%;">
+                        <label>الصلاحيات (الأقسام المتاحة للمستخدم)</label>
+                        <div style="display:flex; flex-wrap:wrap; gap:10px; background:#f5f7fa; padding:12px 14px; border-radius:10px;">
+                            <label style="display:flex; align-items:center; gap:5px; font-size:13px; cursor:pointer;"><input type="checkbox" class="perm-check" value="inventory" checked> 📦 مخزون</label>
+                            <label style="display:flex; align-items:center; gap:5px; font-size:13px; cursor:pointer;"><input type="checkbox" class="perm-check" value="consumption" checked> 📊 استهلاك</label>
+                            <label style="display:flex; align-items:center; gap:5px; font-size:13px; cursor:pointer;"><input type="checkbox" class="perm-check" value="dailyStatement" checked> 📋 استهلاك يومي</label>
+                            <label style="display:flex; align-items:center; gap:5px; font-size:13px; cursor:pointer;"><input type="checkbox" class="perm-check" value="monthlyStats" checked> 📈 إحصائيات شهرية</label>
+                            <label style="display:flex; align-items:center; gap:5px; font-size:13px; cursor:pointer;"><input type="checkbox" class="perm-check" value="orders" checked> 🛒 طلبيات</label>
+                            <label style="display:flex; align-items:center; gap:5px; font-size:13px; cursor:pointer;"><input type="checkbox" class="perm-check" value="wareed" checked> 📊 وارد ومصروف</label>
+                            <span style="flex-basis:100%; border-top:1px dashed #ccc; margin:4px 0;"></span>
+                            <span style="font-size:12px; color:#888; font-weight:700;">أقسام الأدمن (اختياري):</span>
+                            <label style="display:flex; align-items:center; gap:5px; font-size:13px; cursor:pointer;"><input type="checkbox" class="perm-check" value="overview"> 📊 نظرة عامة</label>
+                            <label style="display:flex; align-items:center; gap:5px; font-size:13px; cursor:pointer;"><input type="checkbox" class="perm-check" value="adminInventory"> 📦 مخزون (إدارة)</label>
+                            <label style="display:flex; align-items:center; gap:5px; font-size:13px; cursor:pointer;"><input type="checkbox" class="perm-check" value="accounts"> 💵 الحسابات</label>
+                            <label style="display:flex; align-items:center; gap:5px; font-size:13px; cursor:pointer;"><input type="checkbox" class="perm-check" value="reports"> 📈 التقارير</label>
+                            <label style="display:flex; align-items:center; gap:5px; font-size:13px; cursor:pointer;"><input type="checkbox" class="perm-check" value="settings"> ⚙️ الإعدادات</label>
+                            <label style="display:flex; align-items:center; gap:5px; font-size:13px; cursor:pointer;"><input type="checkbox" class="perm-check" value="debts"> 💰 المديونية</label>
+                            <label style="display:flex; align-items:center; gap:5px; font-size:13px; cursor:pointer;"><input type="checkbox" class="perm-check" value="adminOrders"> 🛒 طلبيات (إدارة)</label>
+                        </div>
                     </div>
                     <button class="btn-add" onclick="addUser()">➕ إضافة مستخدم</button>
                 </div>
@@ -1034,31 +1074,9 @@
                 </div>
             </div>
         </div>
-    </div>
-</div>
 
-<!-- ===== DASHBOARD ===== -->
-<div class="dashboard" id="dashboard">
-    <div class="top-bar">
-        <div style="display:flex; align-items:center; gap:12px;">
-            <img src="logo.jpeg" alt="DR SAIKR LAB" style="height:40px; border-radius:8px;">
-        </div>
-        <button class="btn-logout" onclick="logout()">🚪 تسجيل الخروج</button>
-        <div class="nav-tabs">
-            <button class="nav-tab active" onclick="showTab('inventory', this)">📦 المخزون</button>
-            <button class="nav-tab" onclick="showTab('consumption', this)">📊 الاستهلاك</button>
-            <button class="nav-tab" onclick="showTab('dailyStatement', this)">📋 بيان الاستهلاك اليومي</button>
-            <button class="nav-tab" onclick="showTab('monthlyStats', this)">📈 الإحصائيات الشهرية</button>
-            <button class="nav-tab" onclick="showTab('orders', this)">🛒 الطلبيات</button>
-            <button class="nav-tab" onclick="openWareedTab(this)">📊 بيان وارد ومصروف</button>
-        </div>
-
-    </div>
-
-    <div class="main-content">
-
-        <!-- ===== INVENTORY TAB ===== -->
-        <div class="tab-content active" id="inventoryTab">
+<!-- ===== INVENTORY TAB ===== -->
+        <div class="tab-content" id="inventoryTab">
             <div class="content-card">
                 <h2>📦 شاشة المخزون</h2>
                 <div class="hint-box">
@@ -1558,6 +1576,30 @@
                 </div>
             </div>
         </div>
+    </div>
+</div>
+
+<!-- ===== DASHBOARD ===== -->
+<div class="dashboard" id="dashboard">
+    <div class="top-bar">
+        <div style="display:flex; align-items:center; gap:12px;">
+            <img src="logo.jpeg" alt="DR SAIKR LAB" style="height:40px; border-radius:8px;">
+        </div>
+        <button class="btn-logout" onclick="logout()">🚪 تسجيل الخروج</button>
+        <div class="nav-tabs">
+            <button class="nav-tab active" onclick="showTab('inventory', this)">📦 المخزون</button>
+            <button class="nav-tab" onclick="showTab('consumption', this)">📊 الاستهلاك</button>
+            <button class="nav-tab" onclick="showTab('dailyStatement', this)">📋 بيان الاستهلاك اليومي</button>
+            <button class="nav-tab" onclick="showTab('monthlyStats', this)">📈 الإحصائيات الشهرية</button>
+            <button class="nav-tab" onclick="showTab('orders', this)">🛒 الطلبيات</button>
+            <button class="nav-tab" onclick="openWareedTab(this)">📊 بيان وارد ومصروف</button>
+        </div>
+
+    </div>
+
+    <div class="main-content">
+
+        
     </div>
 </div>
 
@@ -4677,6 +4719,286 @@ function printWareed() { window.print(); }
         } catch (e) { console.error('Wareed->Accounts auto-fill error:', e); }
     };
 })();
+
+// ========== دخول موحد: الأدمن فقط من الشاشة الرئيسية ==========
+(function() {
+    window.login = function() {
+        const pwd = document.getElementById('password').value;
+        if (pwd === ADMIN_PASSWORD) {
+            document.getElementById('adminPassword').value = pwd;
+            window.adminLogin();
+            document.getElementById('loginScreen').style.display = 'none';
+        } else {
+            const err = document.getElementById('errorMsg');
+            if (err) err.classList.add('show');
+            const inp = document.getElementById('password');
+            inp.value = '';
+            inp.focus();
+        }
+    };
+    const _origAdminLogout = window.adminLogout;
+    window.adminLogout = function() {
+        _origAdminLogout();
+        document.getElementById('adminLoginScreen').style.display = 'none';
+        document.getElementById('loginScreen').style.display = 'flex';
+    };
+})();
+
+// ============================================================
+// ===== نظام المستخدمين بالصلاحيات + الباسوردات التسلسلية mtN =====
+// ============================================================
+const WAREED_PERMS = [
+    {k:'inventory', label:'📦 مخزون'},
+    {k:'consumption', label:'📊 استهلاك'},
+    {k:'dailyStatement', label:'📋 يومي'},
+    {k:'monthlyStats', label:'📈 شهري'},
+    {k:'orders', label:'🛒 طلبيات'},
+    {k:'wareed', label:'📊 وارد'},
+    {k:'overview', label:'📊 نظرة عامة'},
+    {k:'adminInventory', label:'📦 مخزون إدارة'},
+    {k:'accounts', label:'💵 حسابات'},
+    {k:'reports', label:'📈 تقارير'},
+    {k:'settings', label:'⚙️ إعدادات'},
+    {k:'debts', label:'💰 مديونية'},
+    {k:'adminOrders', label:'🛒 طلبيات إدارة'}
+];
+const DEFAULT_PERMS = ['inventory','consumption','dailyStatement','monthlyStats','orders','wareed'];
+function getUsers(){ return JSON.parse(localStorage.getItem('lab_users') || '[]'); }
+function saveUsersLocal(list){ localStorage.setItem('lab_users', JSON.stringify(list)); }
+
+// مزامنة المستخدمين عبر السحابة (مستند مستقل lab/users)
+async function saveUsersToFirebase(){
+    try { await db.collection('lab').doc('users').set({ users: getUsers(), updatedAt: new Date().toISOString() }); }
+    catch(e){ console.error('users save error:', e); }
+}
+function loadUsersFromFirebase(){
+    try {
+        db.collection('lab').doc('users').get().then(snap => {
+            if (snap.exists) {
+                const remote = snap.data().users || [];
+                if (JSON.stringify(remote) !== JSON.stringify(getUsers())) {
+                    saveUsersLocal(remote);
+                    try { users = remote; } catch(e){}
+                    if (document.getElementById('usersTable')) renderUsers();
+                }
+            } else { saveUsersToFirebase(); }
+        }).catch(()=>{});
+    } catch(e){}
+}
+try {
+    db.collection('lab').doc('users').onSnapshot(snap => {
+        if (!snap.exists) return;
+        const remote = snap.data().users || [];
+        if (JSON.stringify(remote) !== JSON.stringify(getUsers())) {
+            saveUsersLocal(remote);
+            try { users = remote; } catch(e){}
+            if (document.getElementById('usersTable')) renderUsers();
+        }
+    });
+} catch(e){}
+
+function nextMtPassword(list){
+    let maxN = 0;
+    list.forEach(u => { const mm = /^mt(\d+)$/.exec(u.password || ''); if (mm) maxN = Math.max(maxN, parseInt(mm[1])); });
+    return 'mt' + (maxN + 1);
+}
+
+// إضافة مستخدم (باسورد تسلسلي + صلاحيات)
+window.addUser = function() {
+    if (window._session && window._session.type === 'user') { alert('⛔ هذه الصفحة متاحة للأدمن فقط'); return; }
+    const name = document.getElementById('newUsername').value.trim();
+    const role = document.getElementById('newUserRole').value;
+    if (!name) { alert('أدخل اسم المستخدم'); return; }
+    const list = getUsers();
+    if (list.some(u => u.name === name)) { alert('⚠️ اسم المستخدم موجود بالفعل'); return; }
+    const perms = [];
+    document.querySelectorAll('.perm-check:checked').forEach(c => perms.push(c.value));
+    if (!perms.length) { alert('حدد صلاحية واحدة على الأقل للمستخدم'); return; }
+    const pass = nextMtPassword(list);
+    list.push({ id: Date.now(), name, role, password: pass, perms, createdAt: new Date().toISOString().split('T')[0] });
+    saveUsersLocal(list);
+    try { users = list; } catch(e){}
+    saveUsersToFirebase();
+    document.getElementById('newUsername').value = '';
+    renderUsers();
+    alert('✅ تم إضافة المستخدم "' + name + '"\n🔑 كلمة المرور الافتراضية: ' + pass);
+};
+
+// جدول المستخدمين (كلمة المرور + الصلاحيات تعدل مباشرة)
+window.renderUsers = function() {
+    const container = document.getElementById('usersTable');
+    if (!container) return;
+    const list = getUsers();
+    if (!list.length) { container.innerHTML = '<div style="text-align:center; color:#999; padding:30px;">لا يوجد مستخدمين مسجلين</div>'; return; }
+    let html = '<table class="data-table"><thead><tr><th>#</th><th>الاسم</th><th>الدور</th><th>كلمة المرور</th><th>الصلاحيات</th><th>تاريخ الإنشاء</th><th>إجراءات</th></tr></thead><tbody>';
+    list.forEach((u, i) => {
+        const roleBadge = u.role === 'admin'
+            ? '<span style="background:#fff3e0;color:#e65100;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700;white-space:nowrap;">👨‍💼 مشرف</span>'
+            : '<span style="background:#e3f2fd;color:#1565C0;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700;white-space:nowrap;">👤 مستخدم</span>';
+        const perms = u.perms || DEFAULT_PERMS;
+        const permBoxes = WAREED_PERMS.map(p =>
+            '<label style="display:inline-flex;align-items:center;gap:3px;margin:2px 5px;font-size:12px;white-space:nowrap;cursor:pointer;"><input type="checkbox" ' + (perms.indexOf(p.k) > -1 ? 'checked' : '') + ' onchange="togglePerm(' + u.id + ',\'' + p.k + '\',this.checked)"> ' + p.label + '</label>'
+        ).join('');
+        html += '<tr>'
+            + '<td>' + (i+1) + '</td>'
+            + '<td style="font-weight:700;white-space:nowrap;">' + u.name + '</td>'
+            + '<td>' + roleBadge + '</td>'
+            + '<td><code style="background:#f5f5f5;padding:4px 10px;border-radius:8px;font-weight:700;letter-spacing:1px;">' + (u.password || '—') + '</code></td>'
+            + '<td style="min-width:230px;">' + permBoxes + '</td>'
+            + '<td style="white-space:nowrap;">' + (u.createdAt || '—') + '</td>'
+            + '<td style="white-space:nowrap;">'
+            + '<button onclick="changeUserPass(' + u.id + ')" title="تغيير كلمة المرور" style="background:#1565C0;color:#fff;border:none;padding:6px 10px;border-radius:8px;cursor:pointer;margin:2px;">🔑</button>'
+            + '<button onclick="deleteUser(' + u.id + ')" title="حذف المستخدم" style="background:#c62828;color:#fff;border:none;padding:6px 10px;border-radius:8px;cursor:pointer;margin:2px;">🗑️</button>'
+            + '</td></tr>';
+    });
+    html += '</tbody></table>';
+    container.innerHTML = html;
+};
+
+window.togglePerm = function(id, key, checked) {
+    if (window._session && window._session.type === 'user') { alert('⛔ هذه الصفحة متاحة للأدمن فقط'); return; }
+    const list = getUsers();
+    const u = list.find(x => x.id === id);
+    if (!u) return;
+    let perms = u.perms || DEFAULT_PERMS;
+    if (checked && perms.indexOf(key) === -1) perms.push(key);
+    if (!checked) perms = perms.filter(k => k !== key);
+    if (!perms.length) { alert('لازم يفضل للمستخدم صلاحية واحدة على الأقل'); renderUsers(); return; }
+    u.perms = perms;
+    saveUsersLocal(list);
+    try { users = list; } catch(e){}
+    saveUsersToFirebase();
+};
+
+window.changeUserPass = function(id) {
+    if (window._session && window._session.type === 'user') { alert('⛔ هذه الصفحة متاحة للأدمن فقط'); return; }
+    const list = getUsers();
+    const u = list.find(x => x.id === id);
+    if (!u) return;
+    const np = prompt('أدخل كلمة المرور الجديدة للمستخدم "' + u.name + '":', u.password || '');
+    if (np === null) return;
+    const t = np.trim();
+    if (t.length < 2) { alert('كلمة المرور قصيرة'); return; }
+    u.password = t;
+    saveUsersLocal(list);
+    try { users = list; } catch(e){}
+    saveUsersToFirebase();
+    renderUsers();
+    alert('✅ تم تحديث كلمة المرور');
+};
+
+window.deleteUser = function(id) {
+    if (window._session && window._session.type === 'user') { alert('⛔ هذه الصفحة متاحة للأدمن فقط'); return; }
+    if (!confirm('هل أنت متأكد من حذف هذا المستخدم؟')) return;
+    const list = getUsers().filter(u => u.id !== id);
+    saveUsersLocal(list);
+    try { users = list; } catch(e){}
+    saveUsersToFirebase();
+    renderUsers();
+};
+
+// دخول المستخدم مع تطبيق الصلاحيات
+window.userLogin = function() {
+    const name = (document.getElementById('wuName').value || '').trim();
+    const pass = document.getElementById('wuPass').value;
+    const u = getUsers().find(x => x.name === name && x.password === pass);
+    const err = document.getElementById('wuError');
+    if (!u) { if (err) err.classList.add('show'); return; }
+    if (err) err.classList.remove('show');
+    const perms = u.perms || DEFAULT_PERMS;
+    window._session = { type: 'user', user: u, perms: perms };
+    // فلترة الأزرار: إدارة المستخدمين للأدمن فقط دائماً + الصلاحيات المحددة
+    document.querySelectorAll('#adminDashboard .nav-tab').forEach(b => {
+        const oc = b.getAttribute('onclick') || '';
+        let t = null;
+        if (oc.indexOf('openWareedTab') > -1) t = 'wareed';
+        else { const mm = oc.match(/(?:showTab|showAdminTab)\('(\w+)'/); if (mm) t = mm[1]; }
+        if (!t) return;
+        if (t === 'users') { b.style.display = 'none'; return; }
+        b.style.display = perms.indexOf(t) > -1 ? '' : 'none';
+    });
+    // تنظيف كامل: قفل كل المحتويات القديمة قبل فتح أي تبويب
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+    const cpBtn = document.getElementById('userChangePassBtn');
+    if (cpBtn) cpBtn.style.display = '';
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('adminDashboard').style.display = 'block';
+    try { if (window.loadFromFirebase) loadFromFirebase(); } catch(e){}
+    try { renderAll(); } catch(e){ console.error('renderAll:', e); }
+    // فتح أول تبويب مسموح
+    const firstBtn = Array.from(document.querySelectorAll('#adminDashboard .nav-tab')).find(b =>
+        b.style.display !== 'none' && (b.getAttribute('onclick') || '').match(/^(showTab|showAdminTab|openWareedTab)/));
+    if (firstBtn) { try { firstBtn.click(); } catch(e){} }
+};
+
+// حارس: منع فتح أقسام غير مسموحة في جلسة مستخدم
+(function() {
+    function _permGuard(tab) {
+        const s = window._session;
+        if (!s || s.type !== 'user') return true;
+        if (tab === 'users') { alert('⛔ إدارة المستخدمين متاحة للأدمن فقط'); return false; }
+        if (s.perms && s.perms.indexOf(tab) === -1) { alert('⛔ هذا القسم غير متاح لحسابك'); return false; }
+        return true;
+    }
+    const _st = window.showTab;
+    window.showTab = function(tab, btn) { if (!_permGuard(tab)) return; _st(tab, btn); };
+    const _sat = window.showAdminTab;
+    window.showAdminTab = function(tab, btn) { if (!_permGuard(tab)) return; _sat(tab, btn); };
+})();
+
+// تغيير كلمة المرور من طرف المستخدم نفسه
+window.changeMyPass = function() {
+    const s = window._session;
+    if (!s || s.type !== 'user') return;
+    const np = prompt('أدخل كلمة المرور الجديدة:');
+    if (np === null) return;
+    const t = np.trim();
+    if (t.length < 3) { alert('كلمة المرور قصيرة (3 أحرف على الأقل)'); return; }
+    const list = getUsers();
+    const u = list.find(x => x.id === s.user.id);
+    if (u) {
+        u.password = t;
+        saveUsersLocal(list);
+        try { users = list; } catch(e){}
+        saveUsersToFirebase();
+        alert('✅ تم تغيير كلمة المرور بنجاح');
+    }
+};
+
+// الجلسات: دخول/خروج الأدمن ينظف الجلسة ويرجع كل الأزرار
+(function() {
+    const _admLogin = window.login;
+    window.login = function() {
+        window._session = null;
+        document.querySelectorAll('#adminDashboard .nav-tab').forEach(b => b.style.display = '');
+        const cp = document.getElementById('userChangePassBtn');
+        if (cp) cp.style.display = 'none';
+        _admLogin();
+    };
+    const _admLogout = window.adminLogout;
+    window.adminLogout = function() {
+        _admLogout();
+        window._session = null;
+        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('#adminDashboard .nav-tab').forEach(b => b.style.display = '');
+        const cp = document.getElementById('userChangePassBtn');
+        if (cp) cp.style.display = 'none';
+        const wp = document.getElementById('wuPass'); if (wp) wp.value = '';
+        document.getElementById('adminLoginScreen').style.display = 'none';
+        document.getElementById('loginScreen').style.display = 'flex';
+    };
+})();
+
+// Enter في خانات دخول المستخدم + تحميل المستخدمين من السحابة
+function _usersInit(){
+    const wuN = document.getElementById('wuName');
+    const wuP = document.getElementById('wuPass');
+    if (wuN) wuN.addEventListener('keypress', e => { if (e.key === 'Enter') window.userLogin(); });
+    if (wuP) wuP.addEventListener('keypress', e => { if (e.key === 'Enter') window.userLogin(); });
+    loadUsersFromFirebase();
+}
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', _usersInit);
+else _usersInit();
 </script>
 </body>
 </html>
