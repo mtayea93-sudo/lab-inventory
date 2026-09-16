@@ -20,6 +20,8 @@
 
   var SITE_URL = 'https://m-tayea.mtayea.com';
   var HANDLE = '@m_tayea';
+
+  var css = [
     '#mtayea-signature{',
     '  position:fixed;bottom:18px;left:18px;z-index:99999;',
     '  font-family:"Segoe UI",Tahoma,Arial,sans-serif;',
