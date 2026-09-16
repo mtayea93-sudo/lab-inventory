@@ -25,7 +25,8 @@ jobs:
           if [ ! -f index.html ]; then echo "لا يوجد index.html - تم التخطي"; exit 0; fi
           if grep -q 'mtayea-signature' index.html; then echo "التوقيع موجود بالفعل"; exit 0; fi
           if grep -qi '</body>' index.html; then
-            sed -i 's#</body>#<script src="mtayea-signature.js"></script></body>#i' index.html
+            # مهم: آخر </body> مش أول واحد — ممكن يكون جوه نصوص JS
+            python3 -c "p='index.html'; s=open(p,encoding='utf-8').read(); tag='<script src=\"mtayea-signature.js\"></script>'; i=s.rfind('</body>'); s=(s[:i]+tag+'\\n'+s[i:]) if i!=-1 else (s+'\\n'+tag+'\\n'); open(p,'w',encoding='utf-8').write(s)"
           else
             echo '<script src="mtayea-signature.js"></script>' >> index.html
           fi
