@@ -461,17 +461,12 @@
 /* بيان وارد ومصروف بعرض كامل */
 body.wareed-wide .main-content { max-width: 100%; }
 
-/* علامة مائية M.Tayea — ظاهرة في كل الصفحات، لا تمنع النقر ولا تحجب التفاصيل */
-.site-watermark {
-    position: fixed;
-    inset: 0;
-    pointer-events: none;
-    z-index: 2147483647;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='360' height='240'%3E%3Ctext x='50%25' y='50%25' font-size='36' font-weight='900' fill='rgba(21,101,192,0.14)' text-anchor='middle' transform='rotate(-30 180 120)' font-family='Segoe UI, Arial, sans-serif'%3EM.Tayea%3C/text%3E%3C/svg%3E");
-    background-repeat: repeat;
-}
-@media print {
-    .site-watermark { display: none !important; }
+/* علامة مائية M.Tayea — خلفية الصفحة: تظهر في الأطراف الملونة فقط ولا تغطي أي مربع */
+body {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='360' height='240'%3E%3Ctext x='50%25' y='50%25' font-size='36' font-weight='900' fill='rgba(255,255,255,0.2)' text-anchor='middle' transform='rotate(-30 180 120)' font-family='Segoe UI, Arial, sans-serif'%3EM.Tayea%3C/text%3E%3C/svg%3E"), linear-gradient(135deg, #1565C0 0%, #FF9800 100%);
+    background-repeat: repeat, no-repeat;
+    background-size: auto, 100% 100%;
+    background-attachment: fixed, scroll;
 }
 
     </style>
@@ -488,8 +483,6 @@ body.wareed-wide .main-content { max-width: 100%; }
 <base target="_blank">
 </head>
 <body>
-<div class="site-watermark" aria-hidden="true"></div>
-
 <!-- ===== LOGIN SCREEN ===== -->
 <div class="login-screen" id="loginScreen">
     <div class="login-box">
