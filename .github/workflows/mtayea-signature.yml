@@ -1,0 +1,37 @@
+name: m_tayea Signature
+# التوقيع التلقائي — ارفع الملف ده في أي ريبو في المسار:
+# .github/workflows/mtayea-signature.yml
+# وبعدها أي push هيضيف التوقيع لوحده.
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  sign:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: تنزيل أحدث نسخة من التوقيع
+        run: curl -sL https://m-tayea.mtayea.com/signature/mtayea-signature.js -o mtayea-signature.js
+
+      - name: حقن التوقيع في index.html
+        run: |
+          if [ ! -f index.html ]; then echo "لا يوجد index.html - تم التخطي"; exit 0; fi
+          if grep -q 'mtayea-signature' index.html; then echo "التوقيع موجود بالفعل"; exit 0; fi
+          if grep -qi '</body>' index.html; then
+            sed -i 's#</body>#<script src="mtayea-signature.js"></script></body>#i' index.html
+          else
+            echo '<script src="mtayea-signature.js"></script>' >> index.html
+          fi
+
+      - name: Commit & Push
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "m_tayea signature [skip ci]"
+          file_pattern: 'index.html mtayea-signature.js'
