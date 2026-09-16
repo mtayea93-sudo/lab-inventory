@@ -14,14 +14,12 @@
 (function () {
   'use strict';
 
+  function init() {
   /* لو التوقيع موجود أصلاً، ما تضفهوش مرتين */
   if (document.getElementById('mtayea-signature')) return;
 
   var SITE_URL = 'https://m-tayea.mtayea.com';
   var HANDLE = '@m_tayea';
-
-  /* الأنماط — نفس هوية الموقع الرئيسي (داكن + وردي) */
-  var css = [
     '#mtayea-signature{',
     '  position:fixed;bottom:18px;left:18px;z-index:99999;',
     '  font-family:"Segoe UI",Tahoma,Arial,sans-serif;',
@@ -74,7 +72,16 @@
   /* ظهور ناعم بعد تحميل الصفحة */
   window.addEventListener('load', function () {
     setTimeout(function () {
-      wrap.querySelector('.mt-badge').classList.add('mt-show');
+      var badge = wrap.querySelector('.mt-badge');
+      if (badge) badge.classList.add('mt-show');
     }, 900);
   });
+  }
+
+  /* يشتغل في أي مكان: في الـ head أو قبل إغلاق body */
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
 })();
