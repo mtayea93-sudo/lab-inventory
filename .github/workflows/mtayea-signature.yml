@@ -33,5 +33,7 @@ jobs:
       - name: Commit & Push
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
-          commit_message: "m_tayea signature [skip ci]"
+          # من غير [skip ci] — عشان GitHub Pages ينشر النسخة الموقعة فوراً
+          # الحماية من التكرار موجودة في خطوة الحقن (grep) مش هنا
+          commit_message: "m_tayea signature 🤖"
           file_pattern: 'index.html mtayea-signature.js'
