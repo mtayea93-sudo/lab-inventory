@@ -45,7 +45,7 @@
     '  box-shadow:0 8px 34px rgba(212,175,55,.35);',
     '}',
     '#mtayea-signature .mt-dot{',
-    '  width:8px;height:8px;border-radius:50%;background:linear-gradient(135deg,#f9e296,#e6c455,#b8912f);',
+    '  width:8px;height:8px;border-radius:50%;background:#d4af37;',
     '  box-shadow:0 0 10px #d4af37;flex-shrink:0;',
     '}',
     '#mtayea-signature .mt-handle{color:#bdbdbd;font-weight:400}',
