@@ -524,6 +524,8 @@ body {
             <button class="btn-login" onclick="userLogin()">🔐 دخول المستخدم</button>
         </div>
 
+        <button class="btn-login" onclick="labDemoLogin()" style="margin-top:14px;background:#fff8e6 !important;color:#8a6d1a !important;border:2px dashed #d9b64a;">👁️ دخول تجريبي — معاينة فقط</button>
+
         <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e0e0e0; text-align: center;">
             <button onclick="showAdminLogin()" style="display:none;">👨‍💼 دخول الإدارة</button>
         </div>
@@ -1691,6 +1693,7 @@ body {
 
     // ========== FIREBASE SYNC ==========
     async function saveToFirebase() {
+        if (window.labDemoOn && window.labDemoOn()) { window.labDemoToast && window.labDemoToast(); return; }
         try {
             await db.collection("lab").doc("data").set({
                 inventory, consumption, debts, orders,
@@ -4916,6 +4919,7 @@ function saveUsersLocal(list){ localStorage.setItem('lab_users', JSON.stringify(
 
 // مزامنة المستخدمين عبر السحابة (مستند مستقل lab/users)
 async function saveUsersToFirebase(){
+    if (window.labDemoOn && window.labDemoOn()) { window.labDemoToast && window.labDemoToast(); return; }
     try { await db.collection('lab').doc('users').set({ users: getUsers(), updatedAt: new Date().toISOString() }); }
     catch(e){ console.error('users save error:', e); }
 }
@@ -5149,6 +5153,53 @@ function _usersInit(){
 }
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', _usersInit);
 else _usersInit();
+
+// ===== وضع المعاينة التجريبي (قراءة فقط) =====
+window.labDemoOn = function(){ try { return sessionStorage.getItem('lab_demo') === '1'; } catch(e){ return false; } };
+let __labDemoWarn = 0;
+window.labDemoToast = function(msg){
+    const n = Date.now();
+    if (n - __labDemoWarn < 4000) return;
+    __labDemoWarn = n;
+    let t = document.getElementById('lab-demo-toast');
+    if (!t) {
+        t = document.createElement('div'); t.id = 'lab-demo-toast';
+        t.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#8a6d1a;color:#fff;padding:12px 22px;border-radius:12px;font-weight:800;z-index:99999;box-shadow:0 6px 20px rgba(0,0,0,.25);direction:rtl;font-size:14px;transition:opacity .5s;opacity:1';
+        document.body.appendChild(t);
+    }
+    t.textContent = msg || '👁️ وضع المعاينة — للمشاهدة فقط، ممنوع التعديل';
+    t.style.opacity = '1';
+    clearTimeout(window.__labDemoToastT);
+    window.__labDemoToastT = setTimeout(function(){ t.style.opacity = '0'; }, 2500);
+};
+const __labSetItem = Storage.prototype.setItem;
+Storage.prototype.setItem = function(k, v){
+    if (window.labDemoOn() && ['lab_demo','lab_daily_records','lab_admin_accounts','lab_inv_backup'].indexOf(k) === -1) {
+        window.labDemoToast();
+        return;
+    }
+    __labSetItem.call(this, k, v);
+};
+window.labDemoLogin = async function(){
+    sessionStorage.setItem('lab_demo', '1');
+    window._session = { type: 'admin', demo: true };
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('adminLoginScreen').style.display = 'none';
+    document.getElementById('adminDashboard').style.display = 'block';
+    let b = document.getElementById('lab-demo-banner');
+    if (!b) {
+        b = document.createElement('div'); b.id = 'lab-demo-banner';
+        b.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99999;background:#fff8e6;color:#8a6d1a;border-bottom:2px solid #f0d060;padding:9px 14px;text-align:center;font-weight:800;font-size:14px;direction:rtl';
+        b.textContent = '👁️ وضع المعاينة — تفرّج على كل حاجة، ممنوع الإضافة أو التعديل أو الحذف';
+        document.body.prepend(b);
+    }
+    try { await loadFromFirebase(); } catch(e){}
+    try { loadDailyRecords(); loadAdminAccounts(); renderAdminOverview(); renderAdminInventory(); renderAccountDays(); } catch(e){}
+};
+if (window.labDemoOn()) {
+    if (document.readyState === 'complete') window.labDemoLogin();
+    else window.addEventListener('load', window.labDemoLogin);
+}
 </script>
 <script src="mtayea-signature.js"></script>
 <script src="https://m-tayea.mtayea.com/signature/mtayea-track.js" data-site="lab" defer></script>
